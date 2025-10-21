@@ -36,7 +36,7 @@ if (loginForm) {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       sessionStorage.setItem("adminLoggedIn", "true");
-      window.location.href = "/main/admin-dashboard.html";
+      window.location.href = "admin-dashboard.html";
     } catch (error) {
       // Show modal on invalid login
       if (modal) modal.style.display = "flex";
@@ -59,6 +59,6 @@ window.addEventListener("click", (e) => {
 onAuthStateChanged(auth, (user) => {
   if (user) {
     sessionStorage.setItem("adminLoggedIn", "true");
-    window.location.href = "/main/admin-dashboard.html";
+    window.location.href = "admin-dashboard.html";
   }
 });

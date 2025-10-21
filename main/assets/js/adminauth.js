@@ -23,7 +23,7 @@ const auth = getAuth(app);
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     sessionStorage.removeItem("adminLoggedIn");
-    window.location.href = "/main/index.html";
+    window.location.href = "index.html";
   }
 });
 
@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       sessionStorage.removeItem("adminLoggedIn");
-      window.location.href = "/main/index.html";
+      window.location.href = "index.html";
     });
   }
 });
