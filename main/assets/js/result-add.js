@@ -274,122 +274,221 @@ document.getElementById("PrintResult").addEventListener("click", () => {
     const printWindow = window.open("", "_blank", "width=900,height=1000");
     printWindow.document.open();
     printWindow.document.write(`
-      <html>
-        <head>
-          <title>Preparing result...</title>
-          <style>
-            body {
-              font-family: 'Segoe UI', sans-serif;
-              margin: 20px;
-              color: #000;
-            }
-            .header {
-              text-align: center;
-              border-bottom: 2px solid #000;
-              padding-bottom: 10px;
-              margin-bottom: 20px;
-            }
-            .header img {
-              width: 90px;
-              display: block;
-              margin: 0 auto;
-            }
-            .header h3 {
-              margin: 5px 0;
-              font-size: 22px;
-              text-transform: uppercase;
-            }
-            .header p {
-              margin: 0;
-              font-size: 13px;
-            }
-            .info-table, .table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 15px;
-              font-size: 13px;
-            }
-            .info-table td {
-              padding: 5px 10px;
-            }
-            .table th, .table td {
-              border: 1px solid #333;
-              padding: 6px;
-              text-align: center;
-            }
-            .section-title {
-              font-weight: bold;
-              margin-top: 20px;
-              margin-bottom: 6px;
-              border-bottom: 1px solid #000;
-              font-size: 14px;
-            }
-            .summary-table td {
-              padding: 4px 10px;
-              font-size: 13px;
-            }
-            .signatures {
-              display: flex;
-              justify-content: space-between;
-              margin-top: 40px;
-            }
-            .sign {
-              border-top: 1px solid #000;
-              padding-top: 5px;
-              font-size: 12px;
-              text-align: center;
-              width: 45%;
-            }
-            @media print {
-              @page { size: A4; margin: 1cm; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <img src="assets/images/logo.png" alt="School Logo">
-            <h3>Damotak International School</h3>
-            <p>Ring Road, Old Oba Road | Email: admin@gmail.com | +23456789</p>
-            <p><strong>Academic Session:</strong> ${sessionYear}</p>
-          </div>
+     <html>
+  <head>
+    <title>Student Result | Damotak International School</title>
+    <style>
+      /* ====== PAGE BASE ====== */
+      body {
+        font-family: "Segoe UI", "Calibri", sans-serif;
+        margin: 40px;
+        background: linear-gradient(135deg, #f7f9fc, #eef2f7);
+        color: #2c3e50;
+        line-height: 1.6;
+      }
 
-          <table class="info-table">
-            <tr><td><strong>Name:</strong> ${studentName}</td><td><strong>Gender:</strong> ${studentGender}</td></tr>
-            <tr><td><strong>Class:</strong> ${studentClass}</td><td><strong>Term:</strong> ${term}</td></tr>
-            <tr><td><strong>Student ID:</strong> ${studentID}</td><td><strong>Date Issued:</strong> ${dateIssued}</td></tr>
-            <tr><td colspan="2"><strong>Issued By:</strong> Damotak Admin</td></tr>
-          </table>
+      /* ====== HEADER ====== */
+      .header {
+        text-align: center;
+        padding-bottom: 15px;
+        margin-bottom: 35px;
+        position: relative;
+      }
 
-          <div class="section-title">Subjects and Scores</div>
-          ${resultTable.outerHTML}
+      .header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        height: 3px;
+        background: linear-gradient(to right, #b89b5e, #2a4d69, #b89b5e);
+        border-radius: 5px;
+      }
 
-          <div class="section-title">Summary</div>
-          <table class="summary-table">
-            <tr><td><strong>Total Marks:</strong></td><td>${totalScore}</td></tr>
-            <tr><td><strong>Average Score:</strong></td><td>${avgScore}</td></tr>
-          </table>
+      .header img {
+        width: 100px;
+        display: block;
+        margin: 0 auto 10px;
+        border-radius: 8px;
+      }
 
-          <div class="section-title">Remarks</div>
-          <table class="table">
-            <tr><th>Class Teacher Remark</th><td>${classRemark}</td></tr>
-            <tr><th>Head Teacher Remark</th><td>${headRemark}</td></tr>
-          </table>
+      .header h3 {
+        margin: 5px 0;
+        font-size: 28px;
+        text-transform: uppercase;
+        color: #1c3d72;
+        letter-spacing: 1px;
+      }
 
-          <div class="section-title">Co-Scholastic Areas (A–C Grade)</div>
-          <table class="table">
-            <tr><th>Area</th><th>Grade</th></tr>
-            <tr><td>Work Education / Prevocational Education</td><td>${workEdu}</td></tr>
-            <tr><td>Art Education</td><td>${artEdu}</td></tr>
-            <tr><td>Health & Physical Education</td><td>${healthEdu}</td></tr>
-          </table>
+      .header p {
+        margin: 2px 0;
+        font-size: 14px;
+        color: #555;
+      }
 
-          <br><br>
-          <div class="signatures">
-            <div class="sign">Class Teacher’s Signature</div>
-            <div class="sign">Headmaster’s Signature</div>
-          </div>
-        </body>
-      </html>
+      /* ====== SECTION TITLES ====== */
+      .section-title {
+        font-weight: 700;
+        margin-top: 25px;
+        margin-bottom: 10px;
+        font-size: 15.5px;
+        color: #1c3d72;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        border-left: 6px solid #b89b5e;
+        padding-left: 12px;
+      }
+
+      /* ====== TABLE STYLES ====== */
+      .info-table,
+      .table,
+      .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        font-size: 13.5px;
+        background: #ffffff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);
+      }
+
+      .info-table td {
+        padding: 8px 12px;
+        color: #2c3e50;
+      }
+
+      .table th {
+        background: linear-gradient(90deg, #1c3d72, #325fa4);
+        color: #fff;
+        padding: 10px;
+        text-align: center;
+        font-weight: 600;
+        border: 1px solid #d0d7e4;
+        letter-spacing: 0.5px;
+      }
+
+      .table td {
+        border: 1px solid #e2e6ec;
+        padding: 8px;
+        text-align: center;
+      }
+
+      .table tr:nth-child(even) td {
+        background-color: #f7faff;
+      }
+
+      .summary-table td {
+        padding: 8px 12px;
+      }
+
+      .summary-table tr:nth-child(odd) td {
+        background-color: #f8f9fb;
+      }
+
+      /* ====== SIGNATURES ====== */
+      .signatures {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 50px;
+      }
+
+      .sign {
+        border-top: 2px solid #1c3d72;
+        padding-top: 8px;
+        font-size: 13px;
+        text-align: center;
+        width: 45%;
+        color: #1c3d72;
+        font-weight: 600;
+      }
+
+      /* ====== HIGHLIGHTED TEXT ====== */
+      strong {
+        color: #1c3d72;
+      }
+
+      /* ====== WATERMARK ====== */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 450px;
+        height: 450px;
+        background: url('assets/images/auth/Damotak Logo.png') no-repeat center center;
+        background-size: 60%;
+        opacity: 0.05;
+        transform: translate(-50%, -50%);
+        z-index: -1;
+      }
+
+      /* ====== PRINT ====== */
+      @media print {
+        body {
+          background: #fff;
+        }
+        @page {
+          size: A4;
+          margin: 1cm;
+        }
+        .table th {
+          background-color: #000 !important;
+          color: #fff !important;
+          -webkit-print-color-adjust: exact;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="header">
+      <img src="assets/images/auth/Damotak Logo.png" alt="School Logo">
+      <h3>Damotak International School</h3>
+      <p>Ring Road, Old Oba Road | Email: admin@gmail.com | +23456789</p>
+      <p><strong>Academic Session:</strong> ${sessionYear}</p>
+    </div>
+
+    <table class="info-table">
+      <tr><td><strong>Name:</strong> ${studentName}</td><td><strong>Gender:</strong> ${studentGender}</td></tr>
+      <tr><td><strong>Class:</strong> ${studentClass}</td><td><strong>Term:</strong> ${term}</td></tr>
+      <tr><td><strong>Student ID:</strong> ${studentID}</td><td><strong>Date Issued:</strong> ${dateIssued}</td></tr>
+      <tr><td colspan="2"><strong>Issued By:</strong> Damotak Admin</td></tr>
+    </table>
+
+    <div class="section-title">Subjects and Scores</div>
+    ${resultTable.outerHTML}
+
+    <div class="section-title">Summary</div>
+    <table class="summary-table">
+      <tr><td><strong>Total Marks:</strong></td><td>${totalScore}</td></tr>
+      <tr><td><strong>Average Score:</strong></td><td>${avgScore}</td></tr>
+    </table>
+
+    <div class="section-title">Remarks</div>
+    <table class="table">
+      <tr><th>Class Teacher Remark</th><td>${classRemark}</td></tr>
+      <tr><th>Head Teacher Remark</th><td>${headRemark}</td></tr>
+    </table>
+
+    <div class="section-title">Co-Scholastic Areas (A–C Grade)</div>
+    <table class="table">
+      <tr><th>Area</th><th>Grade</th></tr>
+      <tr><td>Work Education / Prevocational Education</td><td>${workEdu}</td></tr>
+      <tr><td>Art Education</td><td>${artEdu}</td></tr>
+      <tr><td>Health & Physical Education</td><td>${healthEdu}</td></tr>
+    </table>
+
+    <br><br>
+    <div class="signatures">
+      <div class="sign">Class Teacher’s Signature</div>
+      <div class="sign">Headmaster’s Signature</div>
+    </div>
+  </body>
+</html>
+
     `);
     printWindow.document.close();
 
