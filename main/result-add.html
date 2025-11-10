@@ -469,92 +469,134 @@
               <p class="text-sm text-secondary-light mb-0">Academic Session <span id="sessionYear">2025 - 2026</span></p>
             </div>
 
-            <!-- Student Info -->
-            <div class="p-3">
-              <div class="row justify-content-between">
-                <div class="col-sm-6">
-                  <table class="text-sm text-secondary-light">
-                    <tbody>
-                      <tr><td>Name</td><td class="ps-8">: <span id="studentName">Loading...</span></td></tr>
-                      <tr><td>Gender</td><td class="ps-8">: <span id="studentGender">-</span></td></tr>
-                      <tr><td>Class</td><td class="ps-8">: <span id="studentClass">-</span></td></tr>
-                      <tr>
-                        <td>Term</td>
-                        <td class="ps-8">
-                          : 
-                          <select id="studentTerm" class="form-select form-select-sm d-inline w-auto">
-                            <option value="First Term">First Term</option>
-                            <option value="Second Term">Second Term</option>
-                            <option value="Third Term">Third Term</option>
-                          </select>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+           <!-- Student Info -->
+<div class="p-3">
+  <div class="row justify-content-between">
+    <div class="col-sm-6">
+      <table class="text-sm text-secondary-light">
+        <tbody>
+          <tr><td>Name</td><td class="ps-8">: <span id="studentName">Loading...</span></td></tr>
+          <tr><td>Gender</td><td class="ps-8">: <span id="studentGender">-</span></td></tr>
+          <tr><td>Class</td><td class="ps-8">: <span id="studentClass">-</span></td></tr>
+          <tr>
+            <td>Term</td>
+            <td class="ps-8">
+              : 
+              <select id="studentTerm" class="form-select form-select-sm d-inline w-auto">
+                <option value="First Term">First Term</option>
+                <option value="Second Term">Second Term</option>
+                <option value="Third Term">Third Term</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-                <div class="col-sm-4 text-end">
-                  <p class="text-sm mb-0"><strong>Date Issued:</strong> <span id="dateIssued"></span></p>
-                  <p class="text-sm mb-0"><strong>Issued By:</strong> Damotak Admin</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Subjects Table -->
-            <div class="p-3">
-              <div class="table-responsive scroll-sm">
-                <table class="table bordered-table text-sm" id="resultTable">
-                  <thead>
-                    <tr>
-                      <th>SL.</th>
-                      <th>SUBJECT</th>
-                      <th>C.A</th>
-                      <th>EXAM</th>
-                      <th>TOTAL</th>
-                      <th>GRADE</th>
-                      <th>REMARK</th>
-                      <th class="text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="resultTableBody">
-                    <!-- Dynamic Rows Appear Here -->
-                  </tbody>
-                </table>
-              </div>
-
-              <button type="button" id="addRow" class="btn btn-sm btn-primary mt-3">
-                <iconify-icon icon="simple-line-icons:plus" class="text-xl"></iconify-icon> Add New Subject
-              </button>
-            </div>
-
-            <!-- Remarks -->
-            <div class="p-3 mt-4 border-top">
-              <h6 class="text-md mb-2">School Remarks</h6>
-              <label>Class Teacher Remark:</label>
-              <textarea id="classTeacherRemark" class="form-control mb-2" rows="2"></textarea>
-              <label>Head Teacher Remark:</label>
-              <textarea id="headTeacherRemark" class="form-control" rows="2"></textarea>
-
-              <br>
-             <br>
-               <h6 class="text-md mb-2">Co-Scholastic Area on a 3 point (A - C) grading scale</h6>
-             <label>Work Education (or Prevocational Eduction)</label>
-              <textarea id="workEdu" class="form-control mb-2" rows="2"></textarea>
-              <label>Art Education:</label>
-              <textarea id="artEdu" class="form-control" rows="2"></textarea>
-              <label>Health & Physical Education:</label>
-              <textarea id="healthEdu" class="form-control" rows="2"></textarea>
-            </div>
-
-            <div class="p-3 d-flex justify-content-between mt-3">
-              <span class="border-top px-3 text-sm">Class Teacher Signature</span>
-              <span class="border-top px-3 text-sm">Headmaster Signature</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="col-sm-4 text-end">
+      <p class="text-sm mb-0"><strong>Date Issued:</strong> <span id="dateIssued"></span></p>
+      <p class="text-sm mb-0"><strong>Issued By:</strong> Damotak Admin</p>
     </div>
   </div>
+</div>
+
+<!-- Subjects Table -->
+<div class="p-3">
+  <div class="table-responsive scroll-sm">
+    <table class="table bordered-table text-sm" id="resultTable">
+      <thead>
+        <tr>
+          <th>SL.</th>
+          <th>SUBJECT</th>
+          <th>MARK OBTAINABLE (CA)</th>
+          <th>C.A</th>
+          <th>MARK OBTAINABLE (EXAM)</th>
+          <th>EXAM</th>
+          <th>TOTAL (100)</th>
+          <th>GRADE</th>
+          <th>REMARK</th>
+          <th class="text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody id="resultTableBody">
+        <!-- Dynamic Rows Appear Here -->
+      </tbody>
+    </table>
+  </div>
+
+  <button type="button" id="addRow" class="btn btn-sm btn-primary mt-3">
+    <iconify-icon icon="simple-line-icons:plus" class="text-xl"></iconify-icon> Add New Subject
+  </button>
+</div>
+
+<!-- Attendance Details Form -->
+<div class="p-3 mt-4 border-top">
+  <h6 class="text-md mb-3">Attendance Details</h6>
+  <div class="row">
+    <div class="col-md-4">
+      <label for="daysOpened" class="form-label">Days Opened:</label>
+      <input type="number" id="daysOpened" class="form-control" placeholder="Enter days opened" min="0">
+    </div>
+    <div class="col-md-4">
+      <label for="daysPresent" class="form-label">Days Present:</label>
+      <input type="number" id="daysPresent" class="form-control" placeholder="Enter days present" min="0">
+    </div>
+    <div class="col-md-4">
+      <label for="daysAbsent" class="form-label">Days Absent:</label>
+      <input type="number" id="daysAbsent" class="form-control" placeholder="Enter days absent" min="0">
+    </div>
+  </div>
+  <div class="row mt-3">
+    <div class="col-md-4">
+      <label for="studentHeight" class="form-label">Height (cm):</label>
+      <input type="number" id="studentHeight" class="form-control" placeholder="Enter height in cm" min="0">
+    </div>
+    <div class="col-md-4">
+      <label for="studentWeight" class="form-label">Weight (kg):</label>
+      <input type="number" id="studentWeight" class="form-control" placeholder="Enter weight in kg" min="0">
+    </div>
+    <div class="col-md-4">
+      <label for="nextTermDate" class="form-label">Next Term Date:</label>
+      <input type="date" id="nextTermDate" class="form-control">
+    </div>
+  </div>
+</div>
+
+<!-- Remarks -->
+<div class="p-3 mt-4 border-top">
+  <h6 class="text-md mb-2">Affective & Psychomotor Domain (A - E) grading scale</h6>
+  <label>Neatness</label>
+  <textarea id="Neatness" class="form-control mb-2" rows="1"></textarea>
+  <label>Politeness:</label>
+  <textarea id="Politeness" class="form-control" rows="1"></textarea>
+  <label>Punctuality:</label>
+  <textarea id="Punctuality" class="form-control" rows="1"></textarea>
+  <label>Responsibility:</label>
+  <textarea id="Responsibility" class="form-control" rows="1"></textarea>
+  <label>Teamwork:</label>
+  <textarea id="Teamwork" class="form-control" rows="1"></textarea>
+  <label>Leadership:</label>
+  <textarea id="Leadership" class="form-control" rows="1"></textarea>
+  <label>Helping:</label>
+  <textarea id="Helping" class="form-control" rows="1"></textarea>
+  <label>Honesty:</label>
+  <textarea id="Honesty" class="form-control" rows="1"></textarea>
+  <label>Participation:</label>
+  <textarea id="Participation" class="form-control" rows="1"></textarea>
+
+  <br />
+
+  <h6 class="text-md mb-2">School Remarks</h6>
+  <label>Class Teacher Remark:</label>
+  <textarea id="classTeacherRemark" class="form-control mb-2" rows="2"></textarea>
+  <label>Head Teacher Remark:</label>
+  <textarea id="headTeacherRemark" class="form-control" rows="2"></textarea>
+</div>
+
+<div class="p-3 d-flex justify-content-between mt-3">
+  <span class="border-top px-3 text-sm">Class Teacher Signature</span>
+  <span class="border-top px-3 text-sm">Headmaster Signature</span>
+</div>
 
   
    <!-- ✅ Notification Modal -->

@@ -1,0 +1,169 @@
+🧮 Step 2 — Generate the 10 aspects automatically via JS
+
+Add this block near the top of your script (after DOM loads or inside window.onload):
+
+// ---------------------------
+// Generate Rating Table Rows
+// ---------------------------
+const ratingAspects = [
+  "Neatness",
+  "Politeness",
+  "Punctuality",
+  "Attentiveness",
+  "Responsibility",
+  "Teamwork",
+  "Leadership",
+  "Self-Control",
+  "Honesty",
+  "Participation"
+];
+
+const ratingTableBody = document.getElementById("ratingTable");
+ratingAspects.forEach((aspect) => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${aspect}</td>
+    ${[5,4,3,2,1].map(val =>
+      `<td><input type="checkbox" name="${aspect}" value="${val}" class="ratingBox"></td>`
+    ).join("")}
+  `;
+  ratingTableBody.appendChild(tr);
+});
+
+// ensure only one tick per row
+ratingTableBody.addEventListener("change", (e) => {
+  if (e.target.classList.contains("ratingBox")) {
+    const name = e.target.name;
+    document.querySelectorAll(`input[name="${name}"]`).forEach(box => {
+      if (box !== e.target) box.checked = false;
+    });
+  }
+});
+
+💾 Step 3 — Extend your “Save Result” logic
+
+Find this block:
+
+const resultData = {
+  studentID,
+  term,
+  classTeacherRemark,
+  headTeacherRemark,
+  workEdu,
+  artEdu,
+  healthEdu,
+  dateIssued: new Date().toLocaleDateString(),
+  subjects
+};
+
+
+Replace it with:
+
+// Collect attendance & health
+const daysOpened = document.getElementById("daysOpened").value.trim();
+const daysPresent = document.getElementById("daysPresent").value.trim();
+const daysAbsent = document.getElementById("daysAbsent").value.trim();
+const studentHeight = document.getElementById("studentHeight").value.trim();
+const studentWeight = document.getElementById("studentWeight").value.trim();
+const nextTermDate = document.getElementById("nextTermDate").value;
+
+// Collect ratings
+const ratings = {};
+ratingAspects.forEach(aspect => {
+  const checked = document.querySelector(`input[name="${aspect}"]:checked`);
+  ratings[aspect] = checked ? checked.value : "";
+});
+
+const resultData = {
+  studentID,
+  term,
+  classTeacherRemark,
+  headTeacherRemark,
+  workEdu,
+  artEdu,
+  healthEdu,
+  daysOpened,
+  daysPresent,
+  daysAbsent,
+  studentHeight,
+  studentWeight,
+  nextTermDate,
+  ratings,
+  dateIssued: new Date().toLocaleDateString(),
+  subjects
+};
+
+
+This ensures the new inputs + rating table are saved into Firebase.
+
+📥 Step 4 — Extend the “Load Previous Results” section
+
+Right after this line inside your if (snapshot.exists()) { ... } block:
+
+document.getElementById("headTeacherRemark").value = data.headTeacherRemark || "";
+
+
+add:
+
+// Load attendance & health
+document.getElementById("daysOpened").value = data.daysOpened || "";
+document.getElementById("daysPresent").value = data.daysPresent || "";
+document.getElementById("daysAbsent").value = data.daysAbsent || "";
+document.getElementById("studentHeight").value = data.studentHeight || "";
+document.getElementById("studentWeight").value = data.studentWeight || "";
+document.getElementById("nextTermDate").value = data.nextTermDate || "";
+
+// Load ratings
+if (data.ratings) {
+  Object.keys(data.ratings).forEach(aspect => {
+    const val = data.ratings[aspect];
+    if (val) {
+      const box = document.querySelector(`input[name="${aspect}"][value="${val}"]`);
+      if (box) box.checked = true;
+    }
+  });
+}
+
+🖨 Step 5 — (Optional) Include these in the Print view
+
+If you want the new data to appear on the printed result, I can modify that section next — would you like me to include those fields (attendance, health, next term, and ratings) in the print layout too?
+
+
+
+
+// result-add.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { saveResult } from "./result-save.js";
+
+// ---------------------------
+// Firebase Configs
+// ---------------------------
+const studentFirebaseConfig = {
+  apiKey: "AIzaSyCz8GoyOi7wviejSPG2CGkOYvEwsaAWX0w",
+  authDomain: "damotak-students-database.firebaseapp.com",
+  databaseURL: "https://damotak-students-database-default-rtdb.firebaseio.com/",
+  projectId: "damotak-students-database",
+  storageBucket: "damotak-students-database.firebasestorage.app",
+  messagingSenderId: "806502646085",
+  appId: "1:806502646085:web:36a97f1d1e0ff4bab6be2c"
+};
+
+const resultFirebaseConfig = {
+  apiKey: "AIzaSyDcrh8wVfeVwnOKnt-AcWDMOmxqNWe_0Uw",
+  authDomain: "damotak-result-database.firebaseapp.com",
+  databaseURL: "https://damotak-result-database-default-rtdb.firebaseio.com/",
+  projectId: "damotak-result-database",
+  storageBucket: "damotak-result-database.firebasestorage.app",
+  messagingSenderId: "413754960869",
+  appId: "1:413754960869:web:b3f51b6aaa0c667af0dd0c"
+};
+
+// ---------------------------
+// Initialize Firebase Apps
+// ---------------------------
+const studentApp = initializeApp(studentFirebaseConfig, "studentDB");
+const studentDb = getDatabase(studentApp);
+
+const resultApp = initializeApp(resultFirebaseConfig, "resultDB");
+const resultDb = getDatabase(resultApp);
