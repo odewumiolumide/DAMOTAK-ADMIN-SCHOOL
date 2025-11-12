@@ -82,27 +82,15 @@ function addSubjectRow(subject = "", ca = "", exam = "", total = "0", grade = "-
   const row = document.createElement("tr");
   row.innerHTML = `
    <td class="sl">${tbody.children.length + 1}</td>
-  <td><input type="text" class="form-control subject-input" value="${subject}" ${readOnly ? "readonly" : ""}></td>
-
-  <!-- Mark Obtainable CA -->
-  <td><input type="number" class="form-control mark-ca" value="30" readonly></td>
-
-  <!-- CA Score -->
-  <td><input type="number" class="form-control ca-input" value="${ca}" min="0" max="30" ${readOnly ? "readonly" : ""}></td>
-
-  <!-- Mark Obtainable Exam -->
-  <td><input type="number" class="form-control mark-exam" value="70" readonly></td>
-
-  <!-- Exam Score -->
-  <td><input type="number" class="form-control exam-input" value="${exam}" min="0" max="70" ${readOnly ? "readonly" : ""}></td>
-
-  <td class="total-score">${total}</td>
-  <td class="grade">${grade}</td>
-  <td class="remark">${remark}</td>
-
-  <td class="text-center">
-    ${readOnly ? "" : '<button class="btn btn-danger btn-sm remove-row">✕</button>'}
-  </td>
+   <td><input type="text" class="form-control subject-input" value="${subject}" ${readOnly ? "readonly" : ""}></td>
+   <td><input type="number" class="form-control mark-ca" value="30" readonly></td>
+   <td><input type="number" class="form-control ca-input" value="${ca}" min="0" max="30" ${readOnly ? "readonly" : ""}></td>
+   <td><input type="number" class="form-control mark-exam" value="70" readonly></td>
+   <td><input type="number" class="form-control exam-input" value="${exam}" min="0" max="70" ${readOnly ? "readonly" : ""}></td>
+   <td class="total-score">${total}</td>
+   <td class="grade">${grade}</td>
+   <td class="remark">${remark}</td>
+   <td class="text-center">${readOnly ? "" : '<button class="btn btn-danger btn-sm remove-row">✕</button>'}</td>
   `;
   tbody.appendChild(row);
   refreshRowNumbers();
@@ -133,16 +121,142 @@ tbody.addEventListener("input", (e) => {
     const exam = parseInt(tr.querySelector(".exam-input").value) || 0;
     const total = ca + exam;
     let grade = "-", remark = "-";
+
     if (total >= 70) { grade = "A"; remark = "Excellent"; }
     else if (total >= 60) { grade = "B"; remark = "Very Good"; }
     else if (total >= 50) { grade = "C"; remark = "Good"; }
     else if (total >= 40) { grade = "D"; remark = "Fair"; }
     else { grade = "F"; remark = "Fail"; }
+
     tr.querySelector(".total-score").textContent = total;
     tr.querySelector(".grade").textContent = grade;
     tr.querySelector(".remark").textContent = remark;
   }
 });
+
+// ---------------------------
+// Grade & Score Validation
+// ---------------------------
+tbody.addEventListener("input", (e) => {
+  const target = e.target;
+  const row = target.closest("tr");
+  const caInput = row.querySelector(".ca-input");
+  const examInput = row.querySelector(".exam-input");
+  const totalCell = row.querySelector(".total-score");
+
+  // CA Input Validation
+  if (target.classList.contains("ca-input")) {
+    let val = parseInt(caInput.value) || 0;
+    if (val < 0) val = 0;
+    if (val > 30) {
+      alert("❌ CA cannot be more than 30. Resetting to 0.");
+      caInput.value = 0;
+      examInput.value = 0;
+      totalCell.textContent = 0;
+      row.querySelector(".grade").textContent = "-";
+      row.querySelector(".remark").textContent = "-";
+      return;
+    }
+    caInput.value = val;
+    totalCell.textContent = val + (parseInt(examInput.value) || 0);
+  }
+
+  // Exam Input Validation
+  if (target.classList.contains("exam-input")) {
+    let val = parseInt(examInput.value) || 0;
+    if (val < 0) val = 0;
+    if (val > 70) {
+      alert("❌ Exam cannot be more than 70. Resetting to 0.");
+      examInput.value = 0;
+      caInput.value = 0;
+      totalCell.textContent = 0;
+      row.querySelector(".grade").textContent = "-";
+      row.querySelector(".remark").textContent = "-";
+      return;
+    }
+    examInput.value = val;
+    totalCell.textContent = val + (parseInt(caInput.value) || 0);
+  }
+});
+
+// ---------------------------
+// Prevent Saving if Invalid Grade
+// ---------------------------
+document.getElementById("saveResult").addEventListener("click", () => {
+  let invalidGrade = false;
+  tbody.querySelectorAll(".grade-input").forEach(input => {
+    const val = input.value.toUpperCase();
+    if (val && !["A","B","C","D","E"].includes(val)) invalidGrade = true;
+  });
+
+  if (invalidGrade) {
+    return alert("❌ Cannot save. Some grade inputs are invalid! Only A, B, C, D, E are allowed.");
+  }
+
+  // ... your save logic here ...
+});
+
+// ---------------------------
+// Attendance Input Validation
+// ---------------------------
+const attendanceInputs = ["daysOpened", "daysPresent", "daysAbsent", "studentHeight", "studentWeight"];
+attendanceInputs.forEach(id => {
+  const input = document.getElementById(id);
+
+  input.addEventListener("input", (e) => {
+    let val = e.target.value.replace(/\D/g, ""); // remove non-digit chars
+    if (val.length > 3) val = val.slice(0, 3);   // max 3 digits
+    e.target.value = val;
+  });
+
+  input.addEventListener("blur", (e) => {
+    if (e.target.value !== "") e.target.value = parseInt(e.target.value, 10);
+  });
+});
+
+// Attendance calculation: Days Opened = Present + Absent
+const daysOpenedInput = document.getElementById("daysOpened");
+const daysPresentInput = document.getElementById("daysPresent");
+const daysAbsentInput = document.getElementById("daysAbsent");
+
+function validateAttendance() {
+  const opened = parseInt(daysOpenedInput.value) || 0;
+  const present = parseInt(daysPresentInput.value) || 0;
+  const absent = parseInt(daysAbsentInput.value) || 0;
+
+  if (opened !== (present + absent)) {
+    daysOpenedInput.setCustomValidity("Days Opened must equal Days Present + Days Absent");
+    daysOpenedInput.reportValidity();
+  } else {
+    daysOpenedInput.setCustomValidity("");
+  }
+}
+
+[daysOpenedInput, daysPresentInput, daysAbsentInput].forEach(input => {
+  input.addEventListener("input", validateAttendance);
+});
+
+// ---------------------------
+// Affective & Psychomotor Domain Validation
+// ---------------------------
+const remarkFields = [
+  "Neatness", "Politeness", "Punctuality", "Responsibility",
+  "Teamwork", "Leadership", "Helping", "Honesty", "Participation"
+];
+
+remarkFields.forEach(id => {
+  const textarea = document.getElementById(id);
+  textarea.addEventListener("input", (e) => {
+    let val = e.target.value.toUpperCase();
+    if (val.length > 1 || !["A", "B", "C", "D", "E"].includes(val)) {
+      alert(`❌ Invalid input for ${id}! Only a single character A, B, C, D, or E is allowed.`);
+      e.target.value = "";
+    } else {
+      e.target.value = val;
+    }
+  });
+});
+
 
 // ---------------------------
 // Load Previous Results
@@ -356,8 +470,8 @@ document.getElementById("PrintResult").addEventListener("click", () => {
     position: fixed;
     top: 50%;
     left: 50%;
-    width: 450px;
-    height: 450px;
+    width: 750px;
+    height: 750px;
     background: url('assets/images/auth/Damotak Logo.png') no-repeat center center;
     background-size: 60%;
     opacity: 0.05;
@@ -459,7 +573,7 @@ document.getElementById("PrintResult").addEventListener("click", () => {
   <img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
 
   <h3>Damotak International School</h3>
-  <p>Ring Road, Old Oba Road | Email: admin@gmail.com | +23456789</p>
+  <p>NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA | Email: DamotakInc@gmail.com | 08033880730</p>
   <p><strong>Academic Session:</strong> ${sessionYear}</p>
 </div>
 
