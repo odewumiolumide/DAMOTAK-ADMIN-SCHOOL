@@ -465,7 +465,9 @@
             <div class="p-20 border-bottom text-center">
               <img src="assets/images/Damotak Logo.png" alt="image" width="90">
               <h3 class="text-xl mt-2">DAMOTAK INTERNATIONAL SCHOOL</h3>
-              <p class="text-sm mb-0">Ring Road, Old Oba Road. | Email: admin@gmail.com | +23456789</p>
+              <p>ADDRESS 1: NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+              <p>ADDRESS 2: AYEKALE IYALODE ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+              <p>Email: DamotakInc@gmail.com | 08033880730</p>
               <p class="text-sm text-secondary-light mb-0">Academic Session <span id="sessionYear">2025 - 2026</span></p>
             </div>
 
@@ -486,6 +488,7 @@
                 <option value="First Term">First Term</option>
                 <option value="Second Term">Second Term</option>
                 <option value="Third Term">Third Term</option>
+                <option value="Yearly Summary">Yearly Summary</option>
               </select>
             </td>
           </tr>
@@ -500,8 +503,8 @@
   </div>
 </div>
 
-<!-- Subjects Table -->
-<div class="p-3">
+<!-- Term Results Table -->
+<div class="p-3" id="termTableContainer">
   <div class="table-responsive scroll-sm">
     <table class="table bordered-table text-sm" id="resultTable">
       <thead>
@@ -518,15 +521,45 @@
           <th class="text-center">Action</th>
         </tr>
       </thead>
-      <tbody id="resultTableBody">
-        <!-- Dynamic Rows Appear Here -->
-      </tbody>
+      <tbody id="resultTableBody"></tbody>
     </table>
   </div>
+</div>
 
-  <button type="button" id="addRow" class="btn btn-sm btn-primary mt-3">
-    <iconify-icon icon="simple-line-icons:plus" class="text-xl"></iconify-icon> Add New Subject
-  </button>
+<!-----Yearly summary-->
+
+<!-- Yearly Summary Table (Initially Hidden) -->
+<div class="p-3" id="yearlySummaryContainer" style="display:none;">
+    <div class="table-responsive scroll-sm">
+        <table class="table bordered-table text-sm" id="yearlySummaryTable">
+            <thead>
+                <tr>
+                    <th>SL.</th>
+                    <th>SUBJECT</th>
+                    <th>1st Term</th>
+                    <th>2nd Term</th>
+                    <th>3rd Term</th>
+                    <th>Average</th>
+                    <th>GRADE</th>
+                    <th>REMARK</th>
+                </tr>
+            </thead>
+            <tbody id="yearlySummaryBody"></tbody>
+        </table>
+    </div>
+    <h6 class="text-md mb-2">Promotion Status</h6>
+    <label for="promotionStatus">Promotion Status :</label>
+    <textarea id="promotionStatus" class="form-control mb-2" rows="2" readonly></textarea>
+    <button type="button" id="printButton" class="btn btn-sm btn-primary mt-3" style="display:none;">
+        <iconify-icon icon="simple-line-icons:print" class="text-xl"></iconify-icon> Print Result
+    </button>
+</div>
+
+  <!-- Term Page Section -->
+<div class="p-3">
+    <button type="button" id="addRow" class="btn btn-sm btn-primary mt-3">
+        <iconify-icon icon="simple-line-icons:plus" class="text-xl"></iconify-icon> Add New Subject
+    </button>
 </div>
 
 <!-- Attendance Details Form -->
@@ -592,6 +625,7 @@
   <label>Head Teacher Remark:</label>
   <textarea id="headTeacherRemark" class="form-control" rows="2"></textarea>
 </div>
+
 
 <div class="p-3 d-flex justify-content-between mt-3">
   <span class="border-top px-3 text-sm">Class Teacher Signature</span>

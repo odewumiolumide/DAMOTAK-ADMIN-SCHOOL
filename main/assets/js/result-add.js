@@ -45,16 +45,58 @@ document.getElementById("dateIssued").textContent = new Date().toLocaleDateStrin
 const tbody = document.getElementById("resultTableBody");
 
 // ---------------------------
-// Notification Helper
+// Notification Helper (Updated)
 // ---------------------------
 function showNotification(message, success) {
   const msgDiv = document.getElementById("notificationMessage");
   if (!msgDiv) return alert(message);
+
   msgDiv.textContent = message;
   msgDiv.style.color = success ? "green" : "red";
-  new bootstrap.Modal(document.getElementById("notificationModal")).show();
+
+  const modalEl = document.getElementById("notificationModal");
+  let modal = bootstrap.Modal.getInstance(modalEl);
+
+  if (!modal) modal = new bootstrap.Modal(modalEl);
+
+  modal.show();
+
+  // Remove lingering backdrop when modal closes
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    document.body.classList.remove('modal-open');
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) backdrop.remove();
+  }, { once: true }); // ensure this runs only once per show
 }
 
+// ---------------------------
+// Term Change Logic (Updated)
+// ---------------------------
+document.getElementById("studentTerm").addEventListener("change", async (e) => {
+    const term = e.target.value;
+
+    // Hide sections for attendance and remarks
+    const attendanceDetailsContainer = document.querySelector('.p-3.mt-4.border-top'); // Attendance details
+    const remarksContainer = document.querySelectorAll('.p-3.mt-4.border-top')[1]; // Remarks section
+
+    if (term === "Yearly Summary") {
+        yearlySummaryContainer.style.display = "block"; // Show yearly summary
+        document.getElementById("resultTable").parentElement.style.display = "none"; // Hide term table
+        await loadYearlySummary(); // Load yearly summary
+        document.getElementById("printButton").style.display = "block"; // Show print button
+        document.getElementById("addRow").style.display = "none"; // Hide add row button
+        attendanceDetailsContainer.style.display = "none"; // Hide attendance details
+        remarksContainer.style.display = "none"; // Hide remarks
+    } else {
+        yearlySummaryContainer.style.display = "none"; // Hide yearly summary
+        document.getElementById("printButton").style.display = "none"; // Hide print button
+        document.getElementById("addRow").style.display = "block"; // Show add row button
+        document.getElementById("resultTable").parentElement.style.display = "block"; // Show term table
+        await loadPreviousResults(term); // Load selected term
+        attendanceDetailsContainer.style.display = "block"; // Show attendance details
+        remarksContainer.style.display = "block"; // Show remarks
+    }
+});
 // ---------------------------
 // Load Student Info
 // ---------------------------
@@ -573,7 +615,9 @@ document.getElementById("PrintResult").addEventListener("click", () => {
   <img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
 
   <h3>Damotak International School</h3>
-  <p>NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA | Email: DamotakInc@gmail.com | 08033880730</p>
+  <p>ADDRESS 1: NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+  <p>ADDRESS 2: AYEKALE IYALODE ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+  <p>Email: DamotakInc@gmail.com | 08033880730</p>
   <p><strong>Academic Session:</strong> ${sessionYear}</p>
 </div>
 
@@ -838,8 +882,301 @@ ${resultTable.outerHTML}
   };
 });
 
+// ---------------------------
+// Global Variables
+// ---------------------------
+let studentName = "";
+let studentGender = "";
+let studentClass = "";
+let sessionYear = "";
+let term = "Yearly Summary";
+let avgScore = 0;
+let totalScoreValue = 0;
+let promotionStatus = "";
+
+// ---------------------------
+// Print Result Function
+// ---------------------------
+document.getElementById("printButton").addEventListener("click", () => {
+   // Ensure all student info is populated
+    studentName = document.getElementById("studentName")?.value || document.getElementById("studentName")?.textContent || "-";
+    studentGender = document.getElementById("studentGender")?.value || document.getElementById("studentGender")?.textContent || "-";
+    studentClass = document.getElementById("studentClass")?.value || document.getElementById("studentClass")?.textContent || "-";
+    sessionYear = document.getElementById("sessionYear")?.value || document.getElementById("sessionYear")?.textContent || "-";
+    promotionStatus = document.getElementById("promotionStatus")?.value || "-";
+    
+    const resultTable = document.getElementById("yearlySummaryTable").cloneNode(true);
+
+    const printWindow = window.open("", "_blank", "width=900,height=1000");
+    printWindow.document.open();
+    printWindow.document.write(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Result | Damotak International School</title>
+   <style>
+  body {
+    font-family: "Segoe UI", "Calibri", sans-serif;
+    background: linear-gradient(135deg, #f7f9fc, #eef2f7);
+    color: #2c3e50;
+    margin: 30px;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  /* Watermark */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 750px;
+    height: 750px;
+    background: url('assets/images/auth/Damotak Logo.png') no-repeat center center;
+    background-size: 60%;
+    opacity: 0.05;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+  }
+
+  .school-logo {
+  border: 3px solid #0047AB; /* change color as you like */
+  border-radius: 12px;        /* rounded corners, 0 for sharp edges */
+  padding: 5px;               /* space between border and image */
+  width: 150px;               /* adjust size */
+  height: auto;               /* maintain aspect ratio */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* subtle shadow for sharp look */
+  display: block;             /* center with margin if needed */
+  margin: 20px auto;          /* centers image horizontally */
+}
+
+  .header {
+    text-align: center;
+    margin-bottom: 35px;
+    position: relative;
+  }
+  .header img { width: 100px; margin-bottom: 10px; }
+  .header h3 { margin: 5px 0; color: #1c3d72; text-transform: uppercase; letter-spacing: 1px; }
+  .header p { margin: 2px 0; font-size: 13px; }
+
+  .header::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 3px;
+    background: linear-gradient(to right, #1c3d72, #2a4d69);
+    border-radius: 5px;
+  }
+  
+  .col h4,
+.col ul {
+  text-transform: uppercase; /* Make text uppercase */
+}
+ 
+
+  .row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 25px; }
+  .col {
+    flex: 1; min-width: 250px; background: #fff;
+    border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+    padding: 15px 20px;
+  }
+  .col h4 { margin-bottom: 8px; font-size: 14px; text-transform: uppercase; color: #fff; background: #1c3d72; padding: 5px 10px; border-radius: 5px 5px 0 0; }
+  .col ul { list-style: none; padding: 10px 0 0 0; margin: 0; }
+  .col ul li { margin: 4px 0; font-size: 13px; }
+  .col ul li strong { color: #1c3d72; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin-bottom: 25px;
+    background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  th {
+    background: #1c3d72; color: #fff; padding: 6px; font-size: 13px; text-align: center;
+  }
+  td {
+    text-align: center; padding: 6px; border-bottom: 1px solid #eef2f7; font-size: 13px;
+  }
+  tr:nth-child(even) td { background: #f9fbff; }
+  .grade-tick { color: #1c3d72; font-size: 16px; }
+
+  .section-title {
+    font-weight: 700; margin: 25px 0 10px 0; font-size: 16px;
+    color: #1c3d72; text-transform: uppercase; letter-spacing: 0.5px;
+    border-left: 5px solid #1c3d72; padding-left: 10px;
+  }
+
+  .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
+  .sign {
+    border-top: 2px solid #1c3d72; width: 45%; text-align: center;
+    padding-top: 8px; font-size: 13px; color: #1c3d72; font-weight: 600;
+  }
+
+  @media print {
+    body { background: #fff; -webkit-print-color-adjust: exact; }
+    @page { size: A4; margin: 1cm; }
+  }
+    
+  #resultTable td:nth-child(2),
+  #resultTable th:nth-child(2),
+  #resultTableBody input[name="subject"],
+  #resultTableBody select[name="subject"] {
+    text-transform: uppercase !important;
+  }
+
+</style>
+</head>
+<body>
+    <div class="header">
+        <img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
+        <h3>Damotak International School</h3>
+        <p>ADDRESS 1: NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+        <p>ADDRESS 2: AYEKALE IYALODE ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+        <p>Email: DamotakInc@gmail.com | 08033880730</p>
+        <p><strong>Academic Session:</strong> ${sessionYear}</p>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <h4>Student Details</h4>
+            <ul>
+               <li><strong>Name:</strong> ${studentName}</li>
+<li><strong>Gender:</strong> ${studentGender}</li>
+<li><strong>Class:</strong> ${studentClass}</li>
+<li><strong>Term:</strong> ${term}</li>
+<li><strong>Student ID:</strong> ${studentID}</li>
+<li><strong>Date Issued:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section-title">Subjects and Scores</div>
+    ${resultTable.outerHTML}
+
+    <div class="row">
+        <div class="col">
+            <h4>Summary</h4>
+            <ul>
+                <li><strong>Total Marks:</strong> ${totalScoreValue}</li>
+<li><strong>Average Score:</strong> ${avgScore}%</li>
+            </ul>
+        </div>
+        <div class="col">
+            <h4>Promotion Status</h4>
+            <ul>
+               <li><strong>Promotion Status:</strong> ${promotionStatus}</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="signatures">
+        <div class="sign">Class Teacher’s Signature</div>
+        <div class="sign">Headmaster’s Signature</div>
+    </div>
+</body>
+</html>
+    `);
+    printWindow.document.close();
+
+    printWindow.onload = () => {
+        const fileTitle = `${studentName.replace(/\s+/g, "_")}_${studentID}_Result`;
+        printWindow.document.title = fileTitle;
+        setTimeout(() => {
+            printWindow.focus();
+            printWindow.print();
+        }, 1000);
+
+        printWindow.onafterprint = printWindow.onbeforeunload = () => {
+            printWindow.close();
+            location.href = "result-add.html";
+        };
+    };
+});
 
 
+// ---------------------------
+// Load Yearly Summary
+// ---------------------------
+async function loadYearlySummary() {
+    yearlySummaryBody.innerHTML = ""; // Clear old rows
+    const terms = ["First Term","Second Term","Third Term"];
+    const termResults = {};
+    let totalScore = 0;
+    let subjectCount = 0;
+
+    // Fetch results for each term
+    for (let t of terms) {
+        const snapshot = await get(ref(resultDb, `Results/${studentID}/${t}`));
+        termResults[t] = snapshot.exists() ? snapshot.val().Subjects : {};
+    }
+
+    // Collect unique subjects
+    const subjectSet = new Set();
+    terms.forEach(term => {
+        Object.keys(termResults[term] || {}).forEach(sub => {
+            subjectSet.add(sub.trim().toLowerCase());
+        });
+    });
+    const allSubjects = Array.from(subjectSet);
+
+    allSubjects.forEach((subjectKey, index) => {
+        const firstTermSub = Object.keys(termResults["First Term"] || {}).find(s => s.trim().toLowerCase()===subjectKey) || "";
+        const secondTermSub = Object.keys(termResults["Second Term"] || {}).find(s => s.trim().toLowerCase()===subjectKey) || "";
+        const thirdTermSub = Object.keys(termResults["Third Term"] || {}).find(s => s.trim().toLowerCase()===subjectKey) || "";
+
+        const firstTerm = termResults["First Term"][firstTermSub]?.total || 0;
+        const secondTerm = termResults["Second Term"][secondTermSub]?.total || 0;
+        const thirdTerm = termResults["Third Term"][thirdTermSub]?.total || 0;
+
+        const avgTotal = ((firstTerm+secondTerm+thirdTerm)/3).toFixed(2);
+
+        totalScore += parseFloat(avgTotal);
+        subjectCount++;
+
+        // Assign grade & remark
+        let grade, remark;
+        if(avgTotal>=70){ grade="A"; remark="Excellent"; }
+        else if(avgTotal>=60){ grade="B"; remark="Very Good"; }
+        else if(avgTotal>=50){ grade="C"; remark="Good"; }
+        else if(avgTotal>=40){ grade="D"; remark="Fair"; }
+        else{ grade="F"; remark="Fail"; }
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+        <td>${index+1}</td>
+        <td>${firstTermSub || secondTermSub || thirdTermSub || subjectKey}</td>
+        <td>${firstTerm}</td>
+        <td>${secondTerm}</td>
+        <td>${thirdTerm}</td>
+        <td>${avgTotal}</td>
+        <td>${grade}</td>
+        <td>${remark}</td>
+        `;
+        yearlySummaryBody.appendChild(row);
+    });
+
+    if(allSubjects.length===0){
+        yearlySummaryBody.innerHTML=`
+        <tr>
+        <td colspan="8" style="text-align:center;color:#d9534f;font-weight:bold;">ℹ️ No previous result found.</td>
+        </tr>`;
+    }
+
+    const overallAverage=(totalScore/subjectCount).toFixed(2);
+
+    if(overallAverage>=80){ promotionStatus="Promoted to the Next Class with Distinction"; }
+    else if(overallAverage>=50){ promotionStatus="Promoted to the Next Class"; }
+    else if(overallAverage>=40){ promotionStatus="Promotion on Trial"; }
+    else{ promotionStatus="Fail"; }
+
+    // Update globals for printing
+    totalScoreValue = totalScore;
+    avgScore = overallAverage;
+
+    document.getElementById("promotionStatus").value=promotionStatus;
+}
 
 // ---------------------------
 // Navigation Buttons
