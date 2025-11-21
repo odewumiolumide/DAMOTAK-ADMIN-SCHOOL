@@ -452,6 +452,11 @@
   Print Result
 </button>
 
+ <button id="MoveNextSession" type="button" class="btn btn-sm btn-primary-600 radius-8 d-inline-flex align-items-center gap-1">
+  <iconify-icon icon="simple-line-icons:check" class="text-xl"></iconify-icon>
+  Move to Next Classs
+</button>
+
         
       </div>
     </div>
@@ -488,7 +493,7 @@
                 <option value="First Term">First Term</option>
                 <option value="Second Term">Second Term</option>
                 <option value="Third Term">Third Term</option>
-                <option value="Yearly Summary">Yearly Summary</option>
+                <option value="Yearly Summary">Yearly Summary</option> 
               </select>
             </td>
           </tr>
@@ -520,7 +525,7 @@
           <th>REMARK</th>
           <th class="text-center">Action</th>
         </tr>
-      </thead>
+      </thead> 
       <tbody id="resultTableBody"></tbody>
     </table>
   </div>
@@ -663,6 +668,25 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
         <button type="button" class="btn btn-primary" id="confirmPrintBtn">Yes, Print</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Move to Next Class Confirmation Modal -->
+<div class="modal fade" id="moveNextClassModal" tabindex="-1" aria-labelledby="moveNextClassModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content radius-12">
+      <div class="modal-header">
+        <h5 class="modal-title" id="moveNextClassModalLabel">Confirm Move to Next Class</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to move this student to the next class?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button type="button" class="btn btn-primary" id="confirmMoveNextBtn">Yes, Move</button>
       </div>
     </div>
   </div>

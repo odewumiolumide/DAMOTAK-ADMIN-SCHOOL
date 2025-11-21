@@ -3,7 +3,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
 import {
   getAuth,
   signInWithEmailAndPassword,
-  onAuthStateChanged
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // ----------------- FIREBASE CONFIG -----------------
@@ -26,6 +27,16 @@ const loginForm = document.getElementById("loginForm");
 const modal = document.getElementById("errorModal");
 const closeModal = document.getElementById("closeModal");
 
+// Show green success text
+const successBox = document.createElement("p");
+successBox.style.color = "green";
+successBox.style.textAlign = "center";
+successBox.style.fontWeight = "600";
+successBox.style.marginTop = "15px";
+successBox.style.display = "none";
+successBox.textContent = "Login successful!";
+document.querySelector(".login-section").appendChild(successBox);
+
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -35,10 +46,16 @@ if (loginForm) {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
+
+      // Show green success message
+      successBox.style.display = "block";
+
       sessionStorage.setItem("adminLoggedIn", "true");
-      window.location.href = "admin-dashboard.html";
+
+      setTimeout(() => {
+        window.location.href = "admin-dashboard.html";
+      }, 1200); // small delay so user can see message
     } catch (error) {
-      // Show modal on invalid login
       if (modal) modal.style.display = "flex";
     }
   });
@@ -57,8 +74,47 @@ window.addEventListener("click", (e) => {
 
 // ----------------- REDIRECT LOGGED USERS -----------------
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    sessionStorage.setItem("adminLoggedIn", "true");
+  const page = window.location.pathname.split("/").pop().toLowerCase();
+
+  if (user && page === "index.html") {
     window.location.href = "admin-dashboard.html";
   }
 });
+
+// ----------------------------------------------------------
+// 🔐 AUTO LOGOUT AFTER 1 MINUTE INACTIVITY
+// ----------------------------------------------------------
+
+const AUTO_LOGOUT_TIME = 1 * 60 * 1000; // 1 minute
+let inactivityTimer;
+
+const currentPage = window.location.pathname.split("/").pop().toLowerCase();
+
+// Only protect dashboard pages (not login)
+if (currentPage !== "index.html" && currentPage !== "") {
+
+  function resetTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(autoLogout, AUTO_LOGOUT_TIME);
+  }
+
+  function autoLogout() {
+    sessionStorage.removeItem("adminLoggedIn");
+
+    signOut(auth)
+      .then(() => {
+        alert("You have been logged out due to inactivity.");
+        window.location.href = "index.html";
+      })
+      .catch(() => {
+        window.location.href = "index.html";
+      });
+  }
+
+  // Reset timer on all user activity
+  window.onload = resetTimer;
+  document.onmousemove = resetTimer;
+  document.onkeydown = resetTimer;
+  document.onclick = resetTimer;
+  document.onscroll = resetTimer;
+}

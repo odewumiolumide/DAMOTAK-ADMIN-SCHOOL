@@ -1,6 +1,6 @@
 // result-add.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 import { saveResult } from "./result-save.js";
 
 // ---------------------------
@@ -1095,13 +1095,12 @@ document.getElementById("printButton").addEventListener("click", () => {
     };
 });
 
-
 // ---------------------------
 // Load Yearly Summary
 // ---------------------------
 async function loadYearlySummary() {
-    yearlySummaryBody.innerHTML = ""; // Clear old rows
-    const terms = ["First Term","Second Term","Third Term"];
+    yearlySummaryBody.innerHTML = "";
+    const terms = ["First Term", "Second Term", "Third Term"];
     const termResults = {};
     let totalScore = 0;
     let subjectCount = 0;
@@ -1122,61 +1121,246 @@ async function loadYearlySummary() {
     const allSubjects = Array.from(subjectSet);
 
     allSubjects.forEach((subjectKey, index) => {
-        const firstTermSub = Object.keys(termResults["First Term"] || {}).find(s => s.trim().toLowerCase()===subjectKey) || "";
-        const secondTermSub = Object.keys(termResults["Second Term"] || {}).find(s => s.trim().toLowerCase()===subjectKey) || "";
-        const thirdTermSub = Object.keys(termResults["Third Term"] || {}).find(s => s.trim().toLowerCase()===subjectKey) || "";
+        const firstTermSub = Object.keys(termResults["First Term"] || {}).find(s => s.trim().toLowerCase() === subjectKey) || "";
+        const secondTermSub = Object.keys(termResults["Second Term"] || {}).find(s => s.trim().toLowerCase() === subjectKey) || "";
+        const thirdTermSub = Object.keys(termResults["Third Term"] || {}).find(s => s.trim().toLowerCase() === subjectKey) || "";
 
         const firstTerm = termResults["First Term"][firstTermSub]?.total || 0;
         const secondTerm = termResults["Second Term"][secondTermSub]?.total || 0;
         const thirdTerm = termResults["Third Term"][thirdTermSub]?.total || 0;
 
-        const avgTotal = ((firstTerm+secondTerm+thirdTerm)/3).toFixed(2);
+        const avgTotal = ((firstTerm + secondTerm + thirdTerm) / 3).toFixed(2);
 
         totalScore += parseFloat(avgTotal);
         subjectCount++;
 
-        // Assign grade & remark
+        // Grade & remark
         let grade, remark;
-        if(avgTotal>=70){ grade="A"; remark="Excellent"; }
-        else if(avgTotal>=60){ grade="B"; remark="Very Good"; }
-        else if(avgTotal>=50){ grade="C"; remark="Good"; }
-        else if(avgTotal>=40){ grade="D"; remark="Fair"; }
-        else{ grade="F"; remark="Fail"; }
+        if (avgTotal >= 70) { grade = "A"; remark = "Excellent"; }
+        else if (avgTotal >= 60) { grade = "B"; remark = "Very Good"; }
+        else if (avgTotal >= 50) { grade = "C"; remark = "Good"; }
+        else if (avgTotal >= 40) { grade = "D"; remark = "Fair"; }
+        else { grade = "F"; remark = "Fail"; }
 
         const row = document.createElement("tr");
         row.innerHTML = `
-        <td>${index+1}</td>
-        <td>${firstTermSub || secondTermSub || thirdTermSub || subjectKey}</td>
-        <td>${firstTerm}</td>
-        <td>${secondTerm}</td>
-        <td>${thirdTerm}</td>
-        <td>${avgTotal}</td>
-        <td>${grade}</td>
-        <td>${remark}</td>
+            <td>${index + 1}</td>
+            <td>${firstTermSub || secondTermSub || thirdTermSub || subjectKey}</td>
+            <td>${firstTerm}</td>
+            <td>${secondTerm}</td>
+            <td>${thirdTerm}</td>
+            <td>${avgTotal}</td>
+            <td>${grade}</td>
+            <td>${remark}</td>
         `;
         yearlySummaryBody.appendChild(row);
     });
 
-    if(allSubjects.length===0){
-        yearlySummaryBody.innerHTML=`
-        <tr>
-        <td colspan="8" style="text-align:center;color:#d9534f;font-weight:bold;">ℹ️ No previous result found.</td>
-        </tr>`;
+    if (allSubjects.length === 0) {
+        yearlySummaryBody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align:center;color:#d9534f;font-weight:bold;">
+                    ℹ️ No previous result found.
+                </td>
+            </tr>`;
     }
 
-    const overallAverage=(totalScore/subjectCount).toFixed(2);
+    const overallAverage = (totalScore / subjectCount).toFixed(2);
 
-    if(overallAverage>=80){ promotionStatus="Promoted to the Next Class with Distinction"; }
-    else if(overallAverage>=50){ promotionStatus="Promoted to the Next Class"; }
-    else if(overallAverage>=40){ promotionStatus="Promotion on Trial"; }
-    else{ promotionStatus="Fail"; }
+    if (overallAverage >= 80) promotionStatus = "Promoted to the Next Class with Distinction";
+    else if (overallAverage >= 50) promotionStatus = "Promoted to the Next Class";
+    else if (overallAverage >= 40) promotionStatus = "Promotion on Trial";
+    else promotionStatus = "Fail";
 
-    // Update globals for printing
     totalScoreValue = totalScore;
     avgScore = overallAverage;
 
-    document.getElementById("promotionStatus").value=promotionStatus;
+    document.getElementById("promotionStatus").value = promotionStatus;
 }
+
+// ----------------------------------------------
+// Save Yearly Summary
+// ----------------------------------------------
+async function saveYearlySummary(studentID, currentClass) {
+    const summaryData = {
+        totalScore: totalScoreValue,
+        averageScore: avgScore,
+        promotionStatus: promotionStatus,
+        savedAt: new Date().toISOString()
+    };
+
+    await set(ref(resultDb, `Results/${studentID}/${currentClass}/Yearly Summary`), summaryData);
+    console.log("Yearly Summary saved successfully");
+}
+
+
+// ----------------------------------------------
+// Move to Next Class Button → Show Modal
+// ----------------------------------------------
+document.getElementById("MoveNextSession").addEventListener("click", () => {
+    const modal = new bootstrap.Modal(document.getElementById("moveNextClassModal"));
+    modal.show();
+});
+
+
+// ----------------------------------------------
+// Confirm Move to Next Class
+// ----------------------------------------------
+document.getElementById("confirmMoveNextBtn").addEventListener("click", async () => {
+
+    const terms = ["First Term", "Second Term", "Third Term"];
+    let allResultsComplete = true;
+
+    const currentClass = document.getElementById("studentClass").textContent;
+
+    // Check if all 3 terms exist for CURRENT class
+    for (let term of terms) {
+        const path = `Results/${studentID}/${currentClass}/${term}`;
+        const snapshot = await get(ref(resultDb, path));
+
+        if (!snapshot.exists()) {
+            allResultsComplete = false;
+            break;
+        }
+    }
+
+    if (!allResultsComplete) {
+        showNotification("⚠️ Complete ALL terms before moving to the next class.", false);
+        return;
+    }
+
+    // Determine next class
+    const nextClass = getNextClass(currentClass);
+
+    // Save the final yearly summary for this class
+    await saveYearlySummary(studentID, currentClass);
+
+    // Create new session structure for next class
+    await createNewSession(studentID, nextClass);
+
+    // Update Firebase "currentClass"
+    await set(ref(resultDb, `Results/${studentID}/currentClass`), nextClass);
+
+    // Update UI
+    document.getElementById("studentClass").textContent = nextClass;
+
+    // RESET UI tables + inputs
+    yearlySummaryBody.innerHTML = "";
+    totalScoreValue = 0;
+    avgScore = 0;
+    promotionStatus = "";
+
+    // Reset all term tables
+    const termTables = document.querySelectorAll(".term-table-body");
+    termTables.forEach(tb => resetTermTable(tb));
+
+    clearInputs();
+
+    // Default to First Term
+    document.getElementById("termSelect").value = "First Term";
+    document.getElementById("FirstTermTab").click();
+
+    showNotification("✅ Student moved to the next class successfully! First term is ready for new input.", true);
+});
+
+
+// ----------------------------------------------
+// Create Next Class Structure (EMPTY)
+// ----------------------------------------------
+async function createNewSession(studentID, nextClass) {
+    const basePath = `Results/${studentID}/${nextClass}`;
+
+    const terms = ["First Term", "Second Term", "Third Term"];
+
+    for (let term of terms) {
+        await set(ref(resultDb, `${basePath}/${term}/Subjects`), {});
+        await set(ref(resultDb, `${basePath}/${term}/Affective`), {});
+        await set(ref(resultDb, `${basePath}/${term}/Remarks`), "");
+    }
+
+    await set(ref(resultDb, `${basePath}/Yearly Summary`), {});
+}
+
+
+// ----------------------------------------------
+// Load Current Class on Page Load
+// ----------------------------------------------
+async function loadCurrentClass(studentID) {
+    const currentClassSnap = await get(ref(resultDb, `Results/${studentID}/currentClass`));
+
+    const currentClass = currentClassSnap.exists() ? currentClassSnap.val() : "JSS 2";
+
+    document.getElementById("studentClass").textContent = currentClass;
+
+    const yearlySnap = await get(ref(resultDb, `Results/${studentID}/${currentClass}/Yearly Summary`));
+
+    if (yearlySnap.exists()) {
+        const d = yearlySnap.val();
+
+        totalScoreValue = d.totalScore || 0;
+        avgScore = d.averageScore || 0;
+        promotionStatus = d.promotionStatus || "";
+
+        document.getElementById("promotionStatus").value = promotionStatus;
+    } else {
+        yearlySummaryBody.innerHTML = "";
+    }
+}
+
+
+// ----------------------------------------------
+// Helper: Clear All Inputs
+// ----------------------------------------------
+function clearInputs() {
+    const inputs = document.querySelectorAll("input[type='text'], input[type='number'], select");
+    inputs.forEach(input => input.value = "");
+}
+
+
+// ----------------------------------------------
+// Helper: Get Next Class
+// ----------------------------------------------
+function getNextClass(currentClass) {
+
+    const classes = [
+        "Creche",
+        "Nursery 1",
+        "Nursery 2",
+        "Primary 1",
+        "Primary 2",
+        "Primary 3",
+        "Primary 4",
+        "Primary 5",
+        "JSS 1",
+        "JSS 2",
+        "JSS 3",
+        "SSS 1",
+        "SSS 2",
+        "SSS 3"
+    ];
+
+    const index = classes.indexOf(currentClass);
+
+    if (index >= 0 && index < classes.length - 1) {
+        return classes[index + 1];
+    }
+
+    if (index === classes.length - 1) {
+        return "Graduate";
+    }
+
+    return currentClass;
+}
+
+
+// ----------------------------------------------
+// On Page Load
+// ----------------------------------------------
+window.addEventListener("DOMContentLoaded", () => {
+    loadCurrentClass(studentID);
+});
+
+
 
 // ---------------------------
 // Navigation Buttons

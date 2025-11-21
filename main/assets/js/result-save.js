@@ -1,6 +1,6 @@
 // result-save.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, get, update, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 // 🔥 Firebase Config for Result Database
 const firebaseConfig = {
@@ -63,4 +63,21 @@ export async function saveResult(studentID, term, resultData) {
   }
 }
 
+// ✅ Save Yearly Summary
+export async function saveYearlySummary(studentID, summaryData) {
+  // Ensure summaryData has required properties for yearly summary
+  if (!studentID || !summaryData) {
+    console.error("❌ Missing required parameters for saveYearlySummary");
+    return { success: false, message: "Missing required data" };
+  }
 
+  try {
+    // Save yearly summary data
+    await set(ref(db, `Results/${studentID}/Yearly Summary`), summaryData);
+    console.log(`✅ Yearly summary saved successfully for ${studentID}`);
+    return { success: true, message: "✅ Yearly summary saved successfully!" };
+  } catch (error) {
+    console.error("🔥 Firebase Save Error:", error);
+    return { success: false, message: "Error saving yearly summary" };
+  }
+}
