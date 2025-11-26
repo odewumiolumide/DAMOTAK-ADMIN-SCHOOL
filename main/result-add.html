@@ -40,6 +40,19 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
+<style>
+ .signature-img {
+    width: 80px;  
+    height: auto;
+    margin-bottom: -8px;  
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0.9;  /* looks like a signature */
+}
+
+</style>
+
 <body>
 
   <!-- Theme Customization Structure Start -->
@@ -470,9 +483,10 @@
             <div class="p-20 border-bottom text-center">
               <img src="assets/images/Damotak Logo.png" alt="image" width="90">
               <h3 class="text-xl mt-2">DAMOTAK INTERNATIONAL SCHOOL</h3>
-              <p>ADDRESS 1: NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
-              <p>ADDRESS 2: AYEKALE IYALODE ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
-              <p>Email: DamotakInc@gmail.com | 08033880730</p>
+              <p>PRIMARY & JUNIOR SECONDARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+              <p>JUNIOR SECONDARY & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE,SCHEME. OSOGBO.</p>
+              <p>EMAIL: Damotakint@gmail.com </p>
+              <p>NUMBERS: 08033880730 | 08082870544 | 08132687701 </p>
               <p class="text-sm text-secondary-light mb-0">Academic Session <span id="sessionYear">2025 - 2026</span></p>
             </div>
 
@@ -508,7 +522,6 @@
   </div>
 </div>
 
-<!-- Term Results Table -->
 <div class="p-3" id="termTableContainer">
   <div class="table-responsive scroll-sm">
     <table class="table bordered-table text-sm" id="resultTable">
@@ -517,7 +530,8 @@
           <th>SL.</th>
           <th>SUBJECT</th>
           <th>MARK OBTAINABLE (CA)</th>
-          <th>C.A</th>
+          <th>C.A 1</th>
+          <th>C.A 2</th>
           <th>MARK OBTAINABLE (EXAM)</th>
           <th>EXAM</th>
           <th>TOTAL (100)</th>
@@ -530,7 +544,6 @@
     </table>
   </div>
 </div>
-
 <!-----Yearly summary-->
 
 <!-- Yearly Summary Table (Initially Hidden) -->
@@ -627,17 +640,11 @@
   <h6 class="text-md mb-2">School Remarks</h6>
   <label>Class Teacher Remark:</label>
   <textarea id="classTeacherRemark" class="form-control mb-2" rows="2"></textarea>
-  <label>Head Teacher Remark:</label>
-  <textarea id="headTeacherRemark" class="form-control" rows="2"></textarea>
+  <label>Proprietor’s Signature Remark:</label>
+<textarea id="headTeacherRemark" class="form-control" rows="2" readonly></textarea>
+
 </div>
 
-
-<div class="p-3 d-flex justify-content-between mt-3">
-  <span class="border-top px-3 text-sm">Class Teacher Signature</span>
-  <span class="border-top px-3 text-sm">Headmaster Signature</span>
-</div>
-
-  
    <!-- ✅ Notification Modal -->
   <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
     <div class="modal-dialog">

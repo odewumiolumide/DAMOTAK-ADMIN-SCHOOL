@@ -26,14 +26,13 @@ if (studentForm) {
     e.preventDefault();
 
     const name = document.getElementById("studentName").value.trim();
-    const email = document.getElementById("studentEmail").value.trim();
     const phone = document.getElementById("studentPhone")?.value.trim() || "";
     const year = document.getElementById("studentYear")?.value || "";
     const gender = document.getElementById("studentGender")?.value;
     const studentClass = document.getElementById("studentClass")?.value;
     const term = document.getElementById("studentTerm")?.value;
 
-    if (!name || !email || !gender || !studentClass || !term) {
+    if (!name || !gender || !studentClass || !term) {
       showNotification("⚠️ Please fill in all required fields.", false);
       return;
     }
@@ -45,7 +44,6 @@ if (studentForm) {
       const studentData = {
         studentID,
         name,
-        email,
         phone,
         year,
         gender,
@@ -123,7 +121,6 @@ async function renderStudents(filterClass = null, searchQuery = "") {
       </td>
       <td>${new Date(student.createdAt).toLocaleDateString()}</td>
       <td>${student.name}</td>
-      <td>${student.email}</td>
       <td>${student.studentClass}</td>
       <td>${student.gender}</td>
       <td class="text-center">
@@ -163,12 +160,10 @@ function openModal(student, editable = false) {
   document.getElementById("studentModalTitle").textContent = editable ? "Edit Student" : "View Student";
   document.getElementById("modalStudentID").value = student.studentID;
   document.getElementById("modalStudentName").value = student.name;
-  document.getElementById("modalStudentEmail").value = student.email;
   document.getElementById("modalStudentClass").value = student.studentClass;
   document.getElementById("modalStudentGender").value = student.gender;
 
   document.getElementById("modalStudentName").disabled = !editable;
-  document.getElementById("modalStudentEmail").disabled = !editable;
   document.getElementById("modalStudentClass").disabled = !editable;
   document.getElementById("modalStudentGender").disabled = !editable;
 
@@ -184,7 +179,6 @@ if (editForm) {
     const updatedData = {
       studentID: id,
       name: document.getElementById("modalStudentName").value,
-      email: document.getElementById("modalStudentEmail").value,
       studentClass: document.getElementById("modalStudentClass").value,
       gender: document.getElementById("modalStudentGender").value,
       createdAt: new Date().toISOString(),

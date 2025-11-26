@@ -477,7 +477,14 @@
 
         <a href="result-add.html" class="btn btn-sm btn-primary"><i class="ri-add-line"></i> Register Result</a>
       </div>
+
+     <!-- Button to download all results -->
+<button id="printAllBtn" class="btn btn-sm btn-warning">
+    <i class="ri-printer-line"></i> Download All Results
+</button>
     </div>
+    <!-- Container for temporary PDF generation -->
+<div id="pdfContainer" style="position:absolute; left:-9999px; top:-9999px;"></div>
 
     <div class="card-body">
       <table class="table bordered-table mb-0">
@@ -546,10 +553,16 @@
   <script src="assets/js/lib/file-upload.js"></script>
   <!-- audioplayer -->
   <script src="assets/js/lib/audioplayer.js"></script>
+
+<!-- jsPDF and html2canvas libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   
   <!-- main js -->
   <script src="assets/js/app.js"></script>
    <script type="module" src="assets/js/result.js"></script>
+    <script type="module" src="assets/js/result-add.js"></script>
 </body>
 
 

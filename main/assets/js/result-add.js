@@ -45,7 +45,7 @@ document.getElementById("dateIssued").textContent = new Date().toLocaleDateStrin
 const tbody = document.getElementById("resultTableBody");
 
 // ---------------------------
-// Notification Helper (Updated)
+// Notification Helper
 // ---------------------------
 function showNotification(message, success) {
   const msgDiv = document.getElementById("notificationMessage");
@@ -58,48 +58,48 @@ function showNotification(message, success) {
   let modal = bootstrap.Modal.getInstance(modalEl);
 
   if (!modal) modal = new bootstrap.Modal(modalEl);
-
   modal.show();
 
-  // Remove lingering backdrop when modal closes
   modalEl.addEventListener('hidden.bs.modal', () => {
     document.body.classList.remove('modal-open');
     const backdrop = document.querySelector('.modal-backdrop');
     if (backdrop) backdrop.remove();
-  }, { once: true }); // ensure this runs only once per show
+  }, { once: true });
 }
 
 // ---------------------------
-// Term Change Logic (Updated)
+// Term Change Logic
 // ---------------------------
 document.getElementById("studentTerm").addEventListener("change", async (e) => {
-    const term = e.target.value;
+  const term = e.target.value;
 
-    // Hide sections for attendance and remarks
-    const attendanceDetailsContainer = document.querySelector('.p-3.mt-4.border-top'); // Attendance details
-    const remarksContainer = document.querySelectorAll('.p-3.mt-4.border-top')[1]; // Remarks section
+  const attendanceDetailsContainer = document.querySelectorAll('.p-3.mt-4.border-top')[0];
+  const remarksContainer = document.querySelectorAll('.p-3.mt-4.border-top')[1];
 
-    if (term === "Yearly Summary") {
-        yearlySummaryContainer.style.display = "block"; // Show yearly summary
-        document.getElementById("resultTable").parentElement.style.display = "none"; // Hide term table
-        await loadYearlySummary(); // Load yearly summary
-        document.getElementById("printButton").style.display = "block"; // Show print button
-        document.getElementById("addRow").style.display = "none"; // Hide add row button
-        attendanceDetailsContainer.style.display = "none"; // Hide attendance details
-        remarksContainer.style.display = "none"; // Hide remarks
-    } else {
-        yearlySummaryContainer.style.display = "none"; // Hide yearly summary
-        document.getElementById("printButton").style.display = "none"; // Hide print button
-        document.getElementById("addRow").style.display = "block"; // Show add row button
-        document.getElementById("resultTable").parentElement.style.display = "block"; // Show term table
-        await loadPreviousResults(term); // Load selected term
-        attendanceDetailsContainer.style.display = "block"; // Show attendance details
-        remarksContainer.style.display = "block"; // Show remarks
-    }
+  if (term === "Yearly Summary") {
+    yearlySummaryContainer.style.display = "block";
+    document.getElementById("resultTable").parentElement.style.display = "none";
+    await loadYearlySummary();
+    document.getElementById("printButton").style.display = "block";
+    document.getElementById("addRow").style.display = "none";
+    attendanceDetailsContainer.style.display = "none";
+    remarksContainer.style.display = "none";
+  } else {
+    yearlySummaryContainer.style.display = "none";
+    document.getElementById("printButton").style.display = "none";
+    document.getElementById("addRow").style.display = "block";
+    document.getElementById("resultTable").parentElement.style.display = "block";
+    await loadPreviousResults(term);
+    attendanceDetailsContainer.style.display = "block";
+    remarksContainer.style.display = "block";
+  }
 });
+
 // ---------------------------
 // Load Student Info
 // ---------------------------
+let isSS3 = false;
+
 async function loadStudent() {
   try {
     const snap = await get(ref(studentDb, `Students/${studentID}`));
@@ -108,6 +108,13 @@ async function loadStudent() {
       document.getElementById("studentName").textContent = data.name || "N/A";
       document.getElementById("studentClass").textContent = data.studentClass || "N/A";
       document.getElementById("studentGender").textContent = data.gender || "N/A";
+
+      // Detect SS3 (Supports both SS3 and SSS 3)
+      const normalizedClass = data.studentClass.replace(/\s+/g, '').toUpperCase();
+      isSS3 = (normalizedClass === "SSS3");
+
+      console.log("SS3 Class Detected:", isSS3);
+
     } else {
       showNotification("❌ Student not found!", false);
     }
@@ -115,31 +122,55 @@ async function loadStudent() {
     showNotification("⚠️ Error loading student info: " + err.message, false);
   }
 }
+
 loadStudent();
 
+
 // ---------------------------
-// Table Functions
+// Add Subject Row
 // ---------------------------
-function addSubjectRow(subject = "", ca = "", exam = "", total = "0", grade = "-", remark = "-", readOnly = false) {
+function addSubjectRow(subject = "", ca1 = "", ca2 = "", exam = "", total = "0", grade = "-", remark = "-", readOnly = false) {
   const row = document.createElement("tr");
-  row.innerHTML = `
-   <td class="sl">${tbody.children.length + 1}</td>
-   <td><input type="text" class="form-control subject-input" value="${subject}" ${readOnly ? "readonly" : ""}></td>
-   <td><input type="number" class="form-control mark-ca" value="30" readonly></td>
-   <td><input type="number" class="form-control ca-input" value="${ca}" min="0" max="30" ${readOnly ? "readonly" : ""}></td>
-   <td><input type="number" class="form-control mark-exam" value="70" readonly></td>
-   <td><input type="number" class="form-control exam-input" value="${exam}" min="0" max="70" ${readOnly ? "readonly" : ""}></td>
-   <td class="total-score">${total}</td>
-   <td class="grade">${grade}</td>
-   <td class="remark">${remark}</td>
-   <td class="text-center">${readOnly ? "" : '<button class="btn btn-danger btn-sm remove-row">✕</button>'}</td>
-  `;
+
+  if (isSS3) {
+    // SS3 — Exam Only
+    row.innerHTML = `
+      <td class="sl">${tbody.children.length + 1}</td>
+      <td><input type="text" class="form-control subject-input" value="${subject}" ${readOnly ? "readonly" : ""}></td>
+      <td colspan="3" class="text-center text-danger fw-bold">NO C.A IN SS3</td>
+      <td><input type="number" class="form-control mark-exam" value="100" readonly></td>
+      <td><input type="number" class="form-control exam-input" value="${exam}" min="0" max="100" ${readOnly ? "readonly" : ""}></td>
+      <td class="total-score">${total}</td>
+      <td class="grade">${grade}</td>
+      <td class="remark">${remark}</td>
+      <td class="text-center">${readOnly ? "" : '<button class="btn btn-danger btn-sm remove-row">✕</button>'}</td>
+    `;
+  } else {
+    // Normal Classes
+    row.innerHTML = `
+      <td class="sl">${tbody.children.length + 1}</td>
+      <td><input type="text" class="form-control subject-input" value="${subject}" ${readOnly ? "readonly" : ""}></td>
+      <td><input type="number" class="form-control mark-ca" value="40" readonly></td>
+      <td><input type="number" class="form-control ca-input" value="${ca1}" min="0" max="20" ${readOnly ? "readonly" : ""}></td>
+      <td><input type="number" class="form-control ca-input" value="${ca2}" min="0" max="20" ${readOnly ? "readonly" : ""}></td>
+      <td><input type="number" class="form-control mark-exam" value="60" readonly></td>
+      <td><input type="number" class="form-control exam-input" value="${exam}" min="0" max="60" ${readOnly ? "readonly" : ""}></td>
+      <td class="total-score">${total}</td>
+      <td class="grade">${grade}</td>
+      <td class="remark">${remark}</td>
+      <td class="text-center">${readOnly ? "" : '<button class="btn btn-danger btn-sm remove-row">✕</button>'}</td>
+    `;
+  }
+
   tbody.appendChild(row);
   refreshRowNumbers();
 }
 
+// ---------------------------
 function refreshRowNumbers() {
-  Array.from(tbody.children).forEach((tr, i) => tr.querySelector(".sl").textContent = i + 1);
+  Array.from(tbody.children).forEach((tr, i) =>
+    tr.querySelector(".sl").textContent = i + 1
+  );
 }
 
 // ---------------------------
@@ -154,88 +185,112 @@ tbody.addEventListener("click", (e) => {
 });
 
 // ---------------------------
-// Auto Calculate Grades
+// Auto Calculate (Unified System)
 // ---------------------------
 tbody.addEventListener("input", (e) => {
-  if (e.target.classList.contains("ca-input") || e.target.classList.contains("exam-input")) {
-    const tr = e.target.closest("tr");
-    const ca = parseInt(tr.querySelector(".ca-input").value) || 0;
-    const exam = parseInt(tr.querySelector(".exam-input").value) || 0;
-    const total = ca + exam;
-    let grade = "-", remark = "-";
+  const tr = e.target.closest("tr");
+  if (!tr) return;
 
-    if (total >= 70) { grade = "A"; remark = "Excellent"; }
-    else if (total >= 60) { grade = "B"; remark = "Very Good"; }
-    else if (total >= 50) { grade = "C"; remark = "Good"; }
-    else if (total >= 40) { grade = "D"; remark = "Fair"; }
-    else { grade = "F"; remark = "Fail"; }
+  // SS3 — Exam only
+  if (isSS3) {
+    const exam = parseInt(tr.querySelector(".exam-input").value) || 0;
+    const total = exam;
 
     tr.querySelector(".total-score").textContent = total;
-    tr.querySelector(".grade").textContent = grade;
-    tr.querySelector(".remark").textContent = remark;
+    updateGrade(tr, total);
+    return;
   }
+
+  // Normal classes
+  const caInputs = tr.querySelectorAll(".ca-input");
+  const examInput = tr.querySelector(".exam-input");
+
+  const ca1 = parseInt(caInputs[0].value) || 0;
+  const ca2 = parseInt(caInputs[1].value) || 0;
+  const exam = parseInt(examInput.value) || 0;
+
+  const total = ca1 + ca2 + exam;
+
+  tr.querySelector(".total-score").textContent = total;
+  updateGrade(tr, total);
 });
 
 // ---------------------------
-// Grade & Score Validation
+// Validate CA and Exam Inputs with Max Limits
 // ---------------------------
 tbody.addEventListener("input", (e) => {
   const target = e.target;
-  const row = target.closest("tr");
-  const caInput = row.querySelector(".ca-input");
-  const examInput = row.querySelector(".exam-input");
-  const totalCell = row.querySelector(".total-score");
+  const tr = target.closest("tr");
+  if (!tr) return;
 
-  // CA Input Validation
-  if (target.classList.contains("ca-input")) {
-    let val = parseInt(caInput.value) || 0;
-    if (val < 0) val = 0;
-    if (val > 30) {
-      alert("❌ CA cannot be more than 30. Resetting to 0.");
-      caInput.value = 0;
-      examInput.value = 0;
-      totalCell.textContent = 0;
-      row.querySelector(".grade").textContent = "-";
-      row.querySelector(".remark").textContent = "-";
-      return;
+  // Validate CA Inputs (Normal classes only)
+  if (target.classList.contains("ca-input") && !isSS3) {
+    if (parseInt(target.value) > 20) {
+      alert(`❌ CA cannot be more than 20! Value reset to 0.`);
+      target.value = 0;
     }
-    caInput.value = val;
-    totalCell.textContent = val + (parseInt(examInput.value) || 0);
   }
 
-  // Exam Input Validation
+  // Validate Exam Input
   if (target.classList.contains("exam-input")) {
-    let val = parseInt(examInput.value) || 0;
-    if (val < 0) val = 0;
-    if (val > 70) {
-      alert("❌ Exam cannot be more than 70. Resetting to 0.");
-      examInput.value = 0;
-      caInput.value = 0;
-      totalCell.textContent = 0;
-      row.querySelector(".grade").textContent = "-";
-      row.querySelector(".remark").textContent = "-";
-      return;
+    const maxExam = isSS3 ? 100 : 60;
+    if (parseInt(target.value) > maxExam) {
+      alert(`❌ Exam cannot be more than ${maxExam}! Value reset to 0.`);
+      target.value = 0;
     }
-    examInput.value = val;
-    totalCell.textContent = val + (parseInt(caInput.value) || 0);
   }
+
+  // Recalculate total and grade
+  const caInputs = tr.querySelectorAll(".ca-input");
+  const examInput = tr.querySelector(".exam-input");
+
+  const ca1 = caInputs.length > 0 ? parseInt(caInputs[0].value) || 0 : 0;
+  const ca2 = caInputs.length > 1 ? parseInt(caInputs[1].value) || 0 : 0;
+  const exam = parseInt(examInput.value) || 0;
+
+  const total = ca1 + ca2 + exam;
+  tr.querySelector(".total-score").textContent = total;
+  updateGrade(tr, total);
 });
 
+
 // ---------------------------
-// Prevent Saving if Invalid Grade
+// Grade Logic
+// ---------------------------
+function updateGrade(tr, total) {
+  let grade = "-", remark = "-";
+
+  if (total >= 75) { grade = "A1"; remark = "Excellent"; }
+  else if (total >= 70) { grade = "B2"; remark = "Very Good"; }
+  else if (total >= 65) { grade = "B3"; remark = "Good"; }
+  else if (total >= 60) { grade = "C4"; remark = "Credit"; }
+  else if (total >= 55) { grade = "C5"; remark = "Credit"; }
+  else if (total >= 50) { grade = "C6"; remark = "Credit"; }
+  else if (total >= 45) { grade = "D7"; remark = "Pass"; }
+  else if (total >= 40) { grade = "E8"; remark = "Pass"; }
+  else { grade = "F9"; remark = "Fail"; }
+
+  tr.querySelector(".grade").textContent = grade;
+  tr.querySelector(".remark").textContent = remark;
+}
+
+// ---------------------------
+// Prevent Save if Invalid
 // ---------------------------
 document.getElementById("saveResult").addEventListener("click", () => {
   let invalidGrade = false;
-  tbody.querySelectorAll(".grade-input").forEach(input => {
-    const val = input.value.toUpperCase();
-    if (val && !["A","B","C","D","E"].includes(val)) invalidGrade = true;
+
+  tbody.querySelectorAll(".grade").forEach(cell => {
+    const v = cell.textContent;
+    if (!["A1","B2","B3","C4","C5","C6","D7","E8","F9"].includes(v))
+      invalidGrade = true;
   });
 
   if (invalidGrade) {
-    return alert("❌ Cannot save. Some grade inputs are invalid! Only A, B, C, D, E are allowed.");
+    return alert("❌ Cannot save. Some grade inputs are invalid!");
   }
 
-  // ... your save logic here ...
+  // SAVE LOGIC HERE...
 });
 
 // ---------------------------
@@ -299,6 +354,24 @@ remarkFields.forEach(id => {
   });
 });
 
+// ----------------------------------------------
+// Auto Move to Next Affective Field When Enter is Pressed
+// ----------------------------------------------
+remarkFields.forEach((id, index) => {
+  const field = document.getElementById(id);
+
+  field.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault(); // prevent newline
+
+      const nextFieldID = remarkFields[index + 1];
+      if (nextFieldID) {
+        document.getElementById(nextFieldID).focus();
+      }
+    }
+  });
+});
+
 
 // ---------------------------
 // Load Previous Results
@@ -316,27 +389,27 @@ async function loadPreviousResults() {
       const subjects = data.Subjects || {};
       Object.keys(subjects).forEach(sub => {
         const s = subjects[sub];
-        addSubjectRow(s.subject || sub, s.ca || 0, s.exam || 0, s.total || 0, s.grade || "-", s.remark || "-", true);
+        addSubjectRow(s.subject || sub, s.ca1 || 0, s.ca2 || 0, s.exam || 0, s.total || 0, s.grade || "-", s.remark || "-", true);
       });
 
       document.getElementById("classTeacherRemark").value = data.classTeacherRemark || "";
       document.getElementById("headTeacherRemark").value = data.headTeacherRemark || "";
-       document.getElementById("Neatness").value = data.Neatness || "";
-        document.getElementById("Politeness").value = data.Politeness || "";
-        document.getElementById("Punctuality").value = data.Punctuality || "";
-         document.getElementById("Responsibility").value = data.Responsibility || "";
-          document.getElementById("Teamwork").value = data.Teamwork || "";
-           document.getElementById("Leadership").value = data.Leadership || "";
-            document.getElementById("Helping").value = data.Helping || "";
-             document.getElementById("Honesty").value = data.Honesty || "";
-               document.getElementById("Participation").value = data.Participation || "";
-                document.getElementById("daysOpened").value = data.daysOpened || "";
-                 document.getElementById("daysPresent").value = data.daysPresent || "";
-                  document.getElementById("daysAbsent").value = data.daysAbsent || "";
-                   document.getElementById("studentHeight").value = data.studentHeight || "";
-                    document.getElementById("studentWeight").value = data.studentWeight || "";
-                     document.getElementById("nextTermDate").value = data.nextTermDate || "";
-        
+      document.getElementById("Neatness").value = data.Neatness || "";
+      document.getElementById("Politeness").value = data.Politeness || "";
+      document.getElementById("Punctuality").value = data.Punctuality || "";
+      document.getElementById("Responsibility").value = data.Responsibility || "";
+      document.getElementById("Teamwork").value = data.Teamwork || "";
+      document.getElementById("Leadership").value = data.Leadership || "";
+      document.getElementById("Helping").value = data.Helping || "";
+      document.getElementById("Honesty").value = data.Honesty || "";
+      document.getElementById("Participation").value = data.Participation || "";
+      document.getElementById("daysOpened").value = data.daysOpened || "";
+      document.getElementById("daysPresent").value = data.daysPresent || "";
+      document.getElementById("daysAbsent").value = data.daysAbsent || "";
+      document.getElementById("studentHeight").value = data.studentHeight || "";
+      document.getElementById("studentWeight").value = data.studentWeight || "";
+      document.getElementById("nextTermDate").value = data.nextTermDate || "";
+
       showNotification("✅ Loaded previous results!", true);
     } else {
       addSubjectRow();
@@ -352,7 +425,7 @@ document.getElementById("studentTerm").addEventListener("change", loadPreviousRe
 window.addEventListener("load", () => setTimeout(loadPreviousResults, 200));
 
 // ---------------------------
-// Save Result
+// Save Result (Updated for SS3 & Normal Classes)
 // ---------------------------
 document.getElementById("saveResult").addEventListener("click", async () => {
   const term = document.getElementById("studentTerm").value.trim();
@@ -361,39 +434,45 @@ document.getElementById("saveResult").addEventListener("click", async () => {
   const Neatness = document.getElementById("Neatness").value.trim();
   const Politeness = document.getElementById("Politeness").value.trim();
   const Punctuality = document.getElementById("Punctuality").value.trim();
-   const Responsibility = document.getElementById("Responsibility").value.trim();
-    const Teamwork = document.getElementById("Teamwork").value.trim();
-     const Leadership = document.getElementById("Leadership").value.trim();
-      const Helping = document.getElementById("Helping").value.trim();
-       const Honesty = document.getElementById("Honesty").value.trim();
-        const Participation = document.getElementById("Participation").value.trim();
-        const daysOpened = document.getElementById("daysOpened").value.trim();
-        const daysPresent = document.getElementById("daysPresent").value.trim();
-        const daysAbsent = document.getElementById("daysAbsent").value.trim();
-        const studentHeight = document.getElementById("studentHeight").value.trim();
-        const studentWeight = document.getElementById("studentWeight").value.trim();
-         const nextTermDate = document.getElementById("nextTermDate").value.trim();
-        
-
+  const Responsibility = document.getElementById("Responsibility").value.trim();
+  const Teamwork = document.getElementById("Teamwork").value.trim();
+  const Leadership = document.getElementById("Leadership").value.trim();
+  const Helping = document.getElementById("Helping").value.trim();
+  const Honesty = document.getElementById("Honesty").value.trim();
+  const Participation = document.getElementById("Participation").value.trim();
+  const daysOpened = document.getElementById("daysOpened").value.trim();
+  const daysPresent = document.getElementById("daysPresent").value.trim();
+  const daysAbsent = document.getElementById("daysAbsent").value.trim();
+  const studentHeight = document.getElementById("studentHeight").value.trim();
+  const studentWeight = document.getElementById("studentWeight").value.trim();
+  const nextTermDate = document.getElementById("nextTermDate").value.trim();
 
   const subjects = [];
   tbody.querySelectorAll("tr").forEach(tr => {
-    const subject = tr.querySelector(".subject-input").value.trim();
-    const ca = parseInt(tr.querySelector(".ca-input").value) || 0;
-    const exam = parseInt(tr.querySelector(".exam-input").value) || 0;
-    const total = ca + exam;
-    const grade = tr.querySelector(".grade").textContent || "-";
-    const remark = tr.querySelector(".remark").textContent || "-";
-    if (subject && !tr.querySelector(".subject-input").readOnly) {
-      subjects.push({ subject, ca, exam, total, grade, remark });
+    const subjectInput = tr.querySelector(".subject-input");
+    const examInput = tr.querySelector(".exam-input");
+    const caInputs = tr.querySelectorAll(".ca-input");
+
+    const subject = subjectInput ? subjectInput.value.trim() : "";
+    const exam = examInput ? parseInt(examInput.value) || 0 : 0;
+
+    // Only take CA values if they exist (normal classes)
+    const ca1 = caInputs.length > 0 ? parseInt(caInputs[0].value) || 0 : 0;
+    const ca2 = caInputs.length > 1 ? parseInt(caInputs[1].value) || 0 : 0;
+
+    const total = ca1 + ca2 + exam;
+    const grade = tr.querySelector(".grade")?.textContent || "-";
+    const remark = tr.querySelector(".remark")?.textContent || "-";
+
+    // Save row if editable or SS3 (even though SS3 has no CA)
+    if (subject && (!subjectInput.readOnly || isSS3)) {
+      subjects.push({ subject, ca1, ca2, exam, total, grade, remark });
     }
   });
 
   if (!subjects.length && !classTeacherRemark.length) {
     return showNotification("⚠️ Add at least one new subject or comment before saving.", false);
   }
-  
- 
 
   const resultData = {
     studentID,
@@ -419,9 +498,14 @@ document.getElementById("saveResult").addEventListener("click", async () => {
     subjects
   };
 
-  const res = await saveResult(studentID, term, resultData);
-  showNotification(res.message, res.success);
-  if (res.success) setTimeout(loadPreviousResults, 400);
+  try {
+    const res = await saveResult(studentID, term, resultData);
+    showNotification(res.message, res.success);
+    if (res.success) setTimeout(loadPreviousResults, 400);
+  } catch (err) {
+    console.error(err);
+    showNotification("⚠️ Failed to save result: " + err.message, false);
+  }
 });
 
 // ---------------------------
@@ -483,9 +567,28 @@ document.getElementById("PrintResult").addEventListener("click", () => {
     const nextTermDate = document.getElementById("nextTermDate")?.value || "-";
 
     // Calculate total and average
-    const totals = Array.from(resultTable.querySelectorAll(".total-score")).map(td => parseInt(td.textContent) || 0);
-    const totalScore = totals.reduce((a, b) => a + b, 0);
-    const avgScore = totals.length ? (totalScore / totals.length).toFixed(2) : "0.00";
+const totals = Array.from(resultTable.querySelectorAll(".total-score")).map(td => parseInt(td.textContent) || 0);
+const totalScore = totals.reduce((a, b) => a + b, 0);
+const avgScore = totals.length ? (totalScore / totals.length).toFixed(2) : "0.00";
+
+// -----------------------------
+// Set Head Teacher Remark dynamically
+// -----------------------------
+let headRemarkAuto = "-";
+
+if (avgScore >= 75) headRemarkAuto = "Outstanding achievement! Keep up the excellent work and continue striving for success.";
+else if (avgScore >= 60) headRemarkAuto = "Very good performance. Well done! Maintain this effort to reach higher goals.";
+else if (avgScore >= 50) headRemarkAuto = "Good performance. Keep working consistently to improve further.";
+else if (avgScore >= 40) headRemarkAuto = "Satisfactory performance. There is room for improvement with more focus and effort.";
+else headRemarkAuto = "Performance needs attention. Extra effort and dedication are recommended to improve in the next term.";
+
+
+// Update the readonly textarea in your HTML
+document.getElementById("headTeacherRemark").value = headRemarkAuto;
+
+// In the print template, just use headRemarkAuto
+
+
 
     // Build print window
     const printWindow = window.open("", "_blank", "width=900,height=1000");
@@ -520,6 +623,38 @@ document.getElementById("PrintResult").addEventListener("click", () => {
     transform: translate(-50%, -50%);
     z-index: -1;
   }
+
+  .signatures {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.sign {
+    text-align: center;
+}
+
+.signature-img {
+    width: 80px;
+    height: auto;
+    display: block;
+    margin: 0 auto 5px auto; /* logo on top, small spacing */
+    opacity: 0.9;
+}
+
+.signature-line {
+    width: 150px;
+    height: 2px;
+    background: #000;
+    margin: 0 auto 5px auto;
+}
+
+.signature-title {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+
 
   .school-logo {
   border: 3px solid #0047AB; /* change color as you like */
@@ -614,10 +749,12 @@ document.getElementById("PrintResult").addEventListener("click", () => {
 <div class="header">
   <img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
 
+ 
   <h3>Damotak International School</h3>
-  <p>ADDRESS 1: NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
-  <p>ADDRESS 2: AYEKALE IYALODE ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
-  <p>Email: DamotakInc@gmail.com | 08033880730</p>
+        <p>PRIMARY & JUNIOR SECONDARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+        <p>JUNIOR SECONDARY & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE,SCHEME. OSOGBO.</p>
+       <p>EMAIL: Damotakint@gmail.com </p>
+       <p>NUMBERS: 08033880730 | 08082870544 | 08132687701 </p>
   <p><strong>Academic Session:</strong> ${sessionYear}</p>
 </div>
 
@@ -661,7 +798,7 @@ ${resultTable.outerHTML}
     <h4>Remarks</h4>
     <ul>
       <li><strong>Class Teacher:</strong> ${classRemark}</li>
-      <li><strong>Head Teacher:</strong> ${headRemark}</li>
+      <li><strong>Head Teacher:</strong>  ${headRemarkAuto}</li>
     </ul>
   </div>
 </div>
@@ -851,9 +988,21 @@ ${resultTable.outerHTML}
 <BR>
 
 <div class="signatures">
-  <div class="sign">Class Teacher’s Signature</div>
-  <div class="sign">Headmaster’s Signature</div>
+
+    <div class="sign">
+        <img id="classTeacherSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
+        <div class="signature-title">Class Teacher’s Signature</div>
+    </div>
+
+    <div class="sign">
+        <img id="proprietorSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
+        <div class="signature-title">Proprietor’s Signature</div>
+    </div>
+
 </div>
+
 
 </body>
 </html>
@@ -864,6 +1013,14 @@ ${resultTable.outerHTML}
     printWindow.onload = () => {
       const fileTitle = `${studentName.replace(/\s+/g, "_")}_${studentID}_Result`;
       printWindow.document.title = fileTitle;
+
+     printWindow.document.getElementById("classTeacherSignatureImg").src =
+    "assets/images/auth/Damotak Logo.png";
+
+printWindow.document.getElementById("proprietorSignatureImg").src =
+    "assets/images/auth/Damotak Logo.png";
+
+
 
       setTimeout(() => {
         printWindow.focus();
@@ -898,7 +1055,6 @@ let promotionStatus = "";
 // Print Result Function
 // ---------------------------
 document.getElementById("printButton").addEventListener("click", () => {
-   // Ensure all student info is populated
     studentName = document.getElementById("studentName")?.value || document.getElementById("studentName")?.textContent || "-";
     studentGender = document.getElementById("studentGender")?.value || document.getElementById("studentGender")?.textContent || "-";
     studentClass = document.getElementById("studentClass")?.value || document.getElementById("studentClass")?.textContent || "-";
@@ -913,168 +1069,124 @@ document.getElementById("printButton").addEventListener("click", () => {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Student Result | Damotak International School</title>
-   <style>
-  body {
-    font-family: "Segoe UI", "Calibri", sans-serif;
-    background: linear-gradient(135deg, #f7f9fc, #eef2f7);
-    color: #2c3e50;
-    margin: 30px;
-    line-height: 1.6;
-    position: relative;
-  }
-
-  /* Watermark */
-  body::before {
-    content: "";
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 750px;
-    height: 750px;
-    background: url('assets/images/auth/Damotak Logo.png') no-repeat center center;
-    background-size: 60%;
-    opacity: 0.05;
-    transform: translate(-50%, -50%);
-    z-index: -1;
-  }
-
-  .school-logo {
-  border: 3px solid #0047AB; /* change color as you like */
-  border-radius: 12px;        /* rounded corners, 0 for sharp edges */
-  padding: 5px;               /* space between border and image */
-  width: 150px;               /* adjust size */
-  height: auto;               /* maintain aspect ratio */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* subtle shadow for sharp look */
-  display: block;             /* center with margin if needed */
-  margin: 20px auto;          /* centers image horizontally */
+<meta charset="UTF-8">
+<title>Student Result | Damotak International School</title>
+<style>
+body { font-family: "Segoe UI", "Calibri", sans-serif; margin: 30px; line-height: 1.6; color: #2c3e50; position: relative; background: #f7f9fc; }
+body::before { content: ""; position: fixed; top:50%; left:50%; width:750px; height:750px; background: url('assets/images/auth/Damotak Logo.png') no-repeat center center; background-size:60%; opacity:0.05; transform: translate(-50%, -50%); z-index:-1; }
+.school-logo { border: 3px solid #0047AB; border-radius: 12px; padding: 5px; width: 150px; height:auto; display:block; margin:20px auto; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
+.header { text-align:center; margin-bottom:35px; position:relative; }
+.header h3 { margin:5px 0; color:#1c3d72; text-transform:uppercase; letter-spacing:1px; }
+.header p { margin:2px 0; font-size:13px; }
+.header::after { content:""; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:80%; height:3px; background: linear-gradient(to right, #1c3d72, #2a4d69); border-radius:5px; }
+.col h4, .col ul { text-transform: uppercase; }
+.row { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:25px; }
+.col { flex:1; min-width:250px; background:#fff; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.07); padding:15px 20px; }
+.col h4 { margin-bottom:8px; font-size:14px; text-transform:uppercase; color:#fff; background:#1c3d72; padding:5px 10px; border-radius:5px 5px 0 0; }
+.col ul { list-style:none; padding:10px 0 0 0; margin:0; }
+.col ul li { margin:4px 0; font-size:13px; }
+.col ul li strong { color:#1c3d72; }
+table { width:100%; border-collapse:collapse; margin-bottom:25px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
+th { background:#1c3d72; color:#fff; padding:6px; font-size:13px; text-align:center; }
+td { text-align:center; padding:6px; border-bottom:1px solid #eef2f7; font-size:13px; }
+tr:nth-child(even) td { background:#f9fbff; }
+.section-title { font-weight:700; margin:25px 0 10px 0; font-size:16px; color:#1c3d72; text-transform:uppercase; letter-spacing:0.5px; border-left:5px solid #1c3d72; padding-left:10px; }
+.signatures { display:flex; justify-content:space-between; margin-top:40px; }
+.sign { border-top:2px solid #1c3d72; width:45%; text-align:center; padding-top:8px; font-size:13px; color:#1c3d72; font-weight:600; }
+@media print { body { background:#fff; -webkit-print-color-adjust: exact; } @page { size:A4; margin:1cm; } }
+ .signatures {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
 }
 
-  .header {
+.sign {
     text-align: center;
-    margin-bottom: 35px;
-    position: relative;
-  }
-  .header img { width: 100px; margin-bottom: 10px; }
-  .header h3 { margin: 5px 0; color: #1c3d72; text-transform: uppercase; letter-spacing: 1px; }
-  .header p { margin: 2px 0; font-size: 13px; }
-
-  .header::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    height: 3px;
-    background: linear-gradient(to right, #1c3d72, #2a4d69);
-    border-radius: 5px;
-  }
-  
-  .col h4,
-.col ul {
-  text-transform: uppercase; /* Make text uppercase */
 }
- 
 
-  .row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 25px; }
-  .col {
-    flex: 1; min-width: 250px; background: #fff;
-    border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.07);
-    padding: 15px 20px;
-  }
-  .col h4 { margin-bottom: 8px; font-size: 14px; text-transform: uppercase; color: #fff; background: #1c3d72; padding: 5px 10px; border-radius: 5px 5px 0 0; }
-  .col ul { list-style: none; padding: 10px 0 0 0; margin: 0; }
-  .col ul li { margin: 4px 0; font-size: 13px; }
-  .col ul li strong { color: #1c3d72; }
+.signature-img {
+    width: 80px;
+    height: auto;
+    display: block;
+    margin: 0 auto 5px auto; /* logo on top, small spacing */
+    opacity: 0.9;
+}
 
-  table {
-    width: 100%; border-collapse: collapse; margin-bottom: 25px;
-    background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  }
-  th {
-    background: #1c3d72; color: #fff; padding: 6px; font-size: 13px; text-align: center;
-  }
-  td {
-    text-align: center; padding: 6px; border-bottom: 1px solid #eef2f7; font-size: 13px;
-  }
-  tr:nth-child(even) td { background: #f9fbff; }
-  .grade-tick { color: #1c3d72; font-size: 16px; }
+.signature-line {
+    width: 150px;
+    height: 2px;
+    background: #000;
+    margin: 0 auto 5px auto;
+}
 
-  .section-title {
-    font-weight: 700; margin: 25px 0 10px 0; font-size: 16px;
-    color: #1c3d72; text-transform: uppercase; letter-spacing: 0.5px;
-    border-left: 5px solid #1c3d72; padding-left: 10px;
-  }
+.signature-title {
+    font-size: 13px;
+    font-weight: bold;
+}
 
-  .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
-  .sign {
-    border-top: 2px solid #1c3d72; width: 45%; text-align: center;
-    padding-top: 8px; font-size: 13px; color: #1c3d72; font-weight: 600;
-  }
-
-  @media print {
-    body { background: #fff; -webkit-print-color-adjust: exact; }
-    @page { size: A4; margin: 1cm; }
-  }
-    
-  #resultTable td:nth-child(2),
-  #resultTable th:nth-child(2),
-  #resultTableBody input[name="subject"],
-  #resultTableBody select[name="subject"] {
-    text-transform: uppercase !important;
-  }
 
 </style>
 </head>
 <body>
-    <div class="header">
-        <img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
-        <h3>Damotak International School</h3>
-        <p>ADDRESS 1: NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
-        <p>ADDRESS 2: AYEKALE IYALODE ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
-        <p>Email: DamotakInc@gmail.com | 08033880730</p>
-        <p><strong>Academic Session:</strong> ${sessionYear}</p>
-    </div>
+<div class="header">
+<img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
+<h3>Damotak International School</h3>
+<p>PRIMARY & JUNIOR SECONDARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+<p>JUNIOR SECONDARY & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE,SCHEME. OSOGBO.</p>
+<p>EMAIL: Damotakint@gmail.com </p>
+<p>NUMBERS: 08033880730 | 08082870544 | 08132687701 </p>
+<p><strong>Academic Session:</strong> ${sessionYear}</p>
+</div>
 
-    <div class="row">
-        <div class="col">
-            <h4>Student Details</h4>
-            <ul>
-               <li><strong>Name:</strong> ${studentName}</li>
+<div class="row">
+<div class="col">
+<h4>Student Details</h4>
+<ul>
+<li><strong>Name:</strong> ${studentName}</li>
 <li><strong>Gender:</strong> ${studentGender}</li>
 <li><strong>Class:</strong> ${studentClass}</li>
 <li><strong>Term:</strong> ${term}</li>
 <li><strong>Student ID:</strong> ${studentID}</li>
 <li><strong>Date Issued:</strong> ${new Date().toLocaleDateString()}</li>
-            </ul>
-        </div>
-    </div>
+</ul>
+</div>
+</div>
 
-    <div class="section-title">Subjects and Scores</div>
-    ${resultTable.outerHTML}
+<div class="section-title">Subjects and Scores</div>
+${resultTable.outerHTML}
 
-    <div class="row">
-        <div class="col">
-            <h4>Summary</h4>
-            <ul>
-                <li><strong>Total Marks:</strong> ${totalScoreValue}</li>
+<div class="row">
+<div class="col">
+<h4>Summary</h4>
+<ul>
+<li><strong>Total Marks:</strong> ${totalScoreValue}</li>
 <li><strong>Average Score:</strong> ${avgScore}%</li>
-            </ul>
-        </div>
-        <div class="col">
-            <h4>Promotion Status</h4>
-            <ul>
-               <li><strong>Promotion Status:</strong> ${promotionStatus}</li>
-            </ul>
-        </div>
+</ul>
+</div>
+<div class="col">
+<h4>Promotion Status</h4>
+<ul>
+<li><strong>Promotion Status:</strong> ${promotionStatus}</li>
+</ul>
+</div>
+</div>
+
+<div class="signatures">
+
+    <div class="sign">
+        <img id="classTeacherSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
+        <div class="signature-title">Class Teacher’s Signature</div>
     </div>
 
-    <div class="signatures">
-        <div class="sign">Class Teacher’s Signature</div>
-        <div class="sign">Headmaster’s Signature</div>
+    <div class="sign">
+        <img id="proprietorSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
+        <div class="signature-title">Proprietor’s Signature</div>
     </div>
+
+</div>
+
 </body>
 </html>
     `);
@@ -1083,11 +1195,14 @@ document.getElementById("printButton").addEventListener("click", () => {
     printWindow.onload = () => {
         const fileTitle = `${studentName.replace(/\s+/g, "_")}_${studentID}_Result`;
         printWindow.document.title = fileTitle;
-        setTimeout(() => {
-            printWindow.focus();
-            printWindow.print();
-        }, 1000);
 
+            printWindow.document.getElementById("classTeacherSignatureImg").src =
+    "assets/images/auth/Damotak Logo.png";
+
+printWindow.document.getElementById("proprietorSignatureImg").src =
+    "assets/images/auth/Damotak Logo.png";
+
+        setTimeout(() => { printWindow.focus(); printWindow.print(); }, 1000);
         printWindow.onafterprint = printWindow.onbeforeunload = () => {
             printWindow.close();
             location.href = "result-add.html";
@@ -1105,25 +1220,19 @@ async function loadYearlySummary() {
     let totalScore = 0;
     let subjectCount = 0;
 
-    // Fetch results for each term
     for (let t of terms) {
-        const snapshot = await get(ref(resultDb, `Results/${studentID}/${t}`));
+        const snapshot = await get(ref(resultDb, `Results/${studentID}/${studentClass}/${t}`));
         termResults[t] = snapshot.exists() ? snapshot.val().Subjects : {};
     }
 
-    // Collect unique subjects
     const subjectSet = new Set();
-    terms.forEach(term => {
-        Object.keys(termResults[term] || {}).forEach(sub => {
-            subjectSet.add(sub.trim().toLowerCase());
-        });
-    });
+    terms.forEach(term => Object.keys(termResults[term] || {}).forEach(sub => subjectSet.add(sub.trim())));
     const allSubjects = Array.from(subjectSet);
 
     allSubjects.forEach((subjectKey, index) => {
-        const firstTermSub = Object.keys(termResults["First Term"] || {}).find(s => s.trim().toLowerCase() === subjectKey) || "";
-        const secondTermSub = Object.keys(termResults["Second Term"] || {}).find(s => s.trim().toLowerCase() === subjectKey) || "";
-        const thirdTermSub = Object.keys(termResults["Third Term"] || {}).find(s => s.trim().toLowerCase() === subjectKey) || "";
+        const firstTermSub = Object.keys(termResults["First Term"] || {}).find(s => s.trim() === subjectKey) || "";
+        const secondTermSub = Object.keys(termResults["Second Term"] || {}).find(s => s.trim() === subjectKey) || "";
+        const thirdTermSub = Object.keys(termResults["Third Term"] || {}).find(s => s.trim() === subjectKey) || "";
 
         const firstTerm = termResults["First Term"][firstTermSub]?.total || 0;
         const secondTerm = termResults["Second Term"][secondTermSub]?.total || 0;
@@ -1134,7 +1243,6 @@ async function loadYearlySummary() {
         totalScore += parseFloat(avgTotal);
         subjectCount++;
 
-        // Grade & remark
         let grade, remark;
         if (avgTotal >= 70) { grade = "A"; remark = "Excellent"; }
         else if (avgTotal >= 60) { grade = "B"; remark = "Very Good"; }
@@ -1143,30 +1251,16 @@ async function loadYearlySummary() {
         else { grade = "F"; remark = "Fail"; }
 
         const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${firstTermSub || secondTermSub || thirdTermSub || subjectKey}</td>
-            <td>${firstTerm}</td>
-            <td>${secondTerm}</td>
-            <td>${thirdTerm}</td>
-            <td>${avgTotal}</td>
-            <td>${grade}</td>
-            <td>${remark}</td>
-        `;
+        row.innerHTML = `<td>${index+1}</td><td>${subjectKey}</td><td>${firstTerm}</td><td>${secondTerm}</td><td>${thirdTerm}</td><td>${avgTotal}</td><td>${grade}</td><td>${remark}</td>`;
         yearlySummaryBody.appendChild(row);
     });
 
     if (allSubjects.length === 0) {
-        yearlySummaryBody.innerHTML = `
-            <tr>
-                <td colspan="8" style="text-align:center;color:#d9534f;font-weight:bold;">
-                    ℹ️ No previous result found.
-                </td>
-            </tr>`;
+        yearlySummaryBody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#d9534f;font-weight:bold;">ℹ️ No previous result found.</td></tr>`;
+        return;
     }
 
     const overallAverage = (totalScore / subjectCount).toFixed(2);
-
     if (overallAverage >= 80) promotionStatus = "Promoted to the Next Class with Distinction";
     else if (overallAverage >= 50) promotionStatus = "Promoted to the Next Class";
     else if (overallAverage >= 40) promotionStatus = "Promotion on Trial";
@@ -1174,13 +1268,12 @@ async function loadYearlySummary() {
 
     totalScoreValue = totalScore;
     avgScore = overallAverage;
-
     document.getElementById("promotionStatus").value = promotionStatus;
 }
 
-// ----------------------------------------------
+// ---------------------------
 // Save Yearly Summary
-// ----------------------------------------------
+// ---------------------------
 async function saveYearlySummary(studentID, currentClass) {
     const summaryData = {
         totalScore: totalScoreValue,
@@ -1188,40 +1281,29 @@ async function saveYearlySummary(studentID, currentClass) {
         promotionStatus: promotionStatus,
         savedAt: new Date().toISOString()
     };
-
     await set(ref(resultDb, `Results/${studentID}/${currentClass}/Yearly Summary`), summaryData);
     console.log("Yearly Summary saved successfully");
 }
 
-
-// ----------------------------------------------
-// Move to Next Class Button → Show Modal
-// ----------------------------------------------
+// ---------------------------
+// Move to Next Class Button
+// ---------------------------
 document.getElementById("MoveNextSession").addEventListener("click", () => {
     const modal = new bootstrap.Modal(document.getElementById("moveNextClassModal"));
     modal.show();
 });
 
-
-// ----------------------------------------------
+// ---------------------------
 // Confirm Move to Next Class
-// ----------------------------------------------
+// ---------------------------
 document.getElementById("confirmMoveNextBtn").addEventListener("click", async () => {
-
     const terms = ["First Term", "Second Term", "Third Term"];
     let allResultsComplete = true;
-
     const currentClass = document.getElementById("studentClass").textContent;
 
-    // Check if all 3 terms exist for CURRENT class
     for (let term of terms) {
-        const path = `Results/${studentID}/${currentClass}/${term}`;
-        const snapshot = await get(ref(resultDb, path));
-
-        if (!snapshot.exists()) {
-            allResultsComplete = false;
-            break;
-        }
+        const snapshot = await get(ref(resultDb, `Results/${studentID}/${currentClass}/${term}`));
+        if (!snapshot.exists()) { allResultsComplete = false; break; }
     }
 
     if (!allResultsComplete) {
@@ -1229,140 +1311,92 @@ document.getElementById("confirmMoveNextBtn").addEventListener("click", async ()
         return;
     }
 
-    // Determine next class
     const nextClass = getNextClass(currentClass);
-
-    // Save the final yearly summary for this class
     await saveYearlySummary(studentID, currentClass);
-
-    // Create new session structure for next class
     await createNewSession(studentID, nextClass);
-
-    // Update Firebase "currentClass"
     await set(ref(resultDb, `Results/${studentID}/currentClass`), nextClass);
-
-    // Update UI
     document.getElementById("studentClass").textContent = nextClass;
 
-    // RESET UI tables + inputs
     yearlySummaryBody.innerHTML = "";
-    totalScoreValue = 0;
-    avgScore = 0;
-    promotionStatus = "";
-
-    // Reset all term tables
+    totalScoreValue = 0; avgScore = 0; promotionStatus = "";
     const termTables = document.querySelectorAll(".term-table-body");
     termTables.forEach(tb => resetTermTable(tb));
-
     clearInputs();
-
-    // Default to First Term
     document.getElementById("termSelect").value = "First Term";
     document.getElementById("FirstTermTab").click();
-
     showNotification("✅ Student moved to the next class successfully! First term is ready for new input.", true);
 });
 
-
-// ----------------------------------------------
-// Create Next Class Structure (EMPTY)
-// ----------------------------------------------
+// ---------------------------
+// Create Next Class Structure
+// ---------------------------
 async function createNewSession(studentID, nextClass) {
     const basePath = `Results/${studentID}/${nextClass}`;
-
     const terms = ["First Term", "Second Term", "Third Term"];
-
     for (let term of terms) {
         await set(ref(resultDb, `${basePath}/${term}/Subjects`), {});
         await set(ref(resultDb, `${basePath}/${term}/Affective`), {});
         await set(ref(resultDb, `${basePath}/${term}/Remarks`), "");
     }
-
     await set(ref(resultDb, `${basePath}/Yearly Summary`), {});
 }
 
-
-// ----------------------------------------------
-// Load Current Class on Page Load
-// ----------------------------------------------
+// ---------------------------
+// Load Current Class
+// ---------------------------
 async function loadCurrentClass(studentID) {
-    const currentClassSnap = await get(ref(resultDb, `Results/${studentID}/currentClass`));
+    try {
+        const studentSnap = await get(ref(studentDb, `Students/${studentID}`));
+        let currentClass = "Unknown";
 
-    const currentClass = currentClassSnap.exists() ? currentClassSnap.val() : "JSS 2";
+        if (studentSnap.exists()) {
+            const studentData = studentSnap.val();
+            currentClass = studentData.studentClass || studentData.className || "Unknown";
+            await set(ref(resultDb, `Results/${studentID}/currentClass`), currentClass);
+            document.getElementById("studentName").textContent = studentData.name || "Unknown";
+            document.getElementById("studentGender").textContent = studentData.gender || "Unknown";
+            document.getElementById("studentClass").textContent = currentClass;
+        }
 
-    document.getElementById("studentClass").textContent = currentClass;
-
-    const yearlySnap = await get(ref(resultDb, `Results/${studentID}/${currentClass}/Yearly Summary`));
-
-    if (yearlySnap.exists()) {
-        const d = yearlySnap.val();
-
-        totalScoreValue = d.totalScore || 0;
-        avgScore = d.averageScore || 0;
-        promotionStatus = d.promotionStatus || "";
-
-        document.getElementById("promotionStatus").value = promotionStatus;
-    } else {
-        yearlySummaryBody.innerHTML = "";
+        const yearlySnap = await get(ref(resultDb, `Results/${studentID}/${currentClass}/Yearly Summary`));
+        if (yearlySnap.exists()) {
+            const d = yearlySnap.val();
+            totalScoreValue = d.totalScore || 0;
+            avgScore = d.averageScore || 0;
+            promotionStatus = d.promotionStatus || "";
+            document.getElementById("promotionStatus").value = promotionStatus;
+        } else yearlySummaryBody.innerHTML = "";
+    } catch (err) {
+        console.error("Failed to load student class info:", err);
+        document.getElementById("studentName").textContent = "Unknown";
+        document.getElementById("studentGender").textContent = "Unknown";
+        document.getElementById("studentClass").textContent = "Unknown";
     }
 }
+loadCurrentClass(studentID);
 
-
-// ----------------------------------------------
-// Helper: Clear All Inputs
-// ----------------------------------------------
+// ---------------------------
+// Clear Inputs
+// ---------------------------
 function clearInputs() {
     const inputs = document.querySelectorAll("input[type='text'], input[type='number'], select");
     inputs.forEach(input => input.value = "");
 }
 
-
-// ----------------------------------------------
-// Helper: Get Next Class
-// ----------------------------------------------
+// ---------------------------
+// Get Next Class
+// ---------------------------
 function getNextClass(currentClass) {
-
-    const classes = [
-        "Creche",
-        "Nursery 1",
-        "Nursery 2",
-        "Primary 1",
-        "Primary 2",
-        "Primary 3",
-        "Primary 4",
-        "Primary 5",
-        "JSS 1",
-        "JSS 2",
-        "JSS 3",
-        "SSS 1",
-        "SSS 2",
-        "SSS 3"
-    ];
-
+    const classes = ["Creche","Nursery 1","Nursery 2","Primary 1","Primary 2","Primary 3","Primary 4","Primary 5","JSS 1","JSS 2","JSS 3","SSS 1","SSS 2","SSS 3"];
     const index = classes.indexOf(currentClass);
-
-    if (index >= 0 && index < classes.length - 1) {
-        return classes[index + 1];
-    }
-
-    if (index === classes.length - 1) {
-        return "Graduate";
-    }
-
+    if (index >= 0 && index < classes.length - 1) return classes[index+1];
+    if (index === classes.length - 1) return "Graduate";
     return currentClass;
 }
-
-
-// ----------------------------------------------
-// On Page Load
-// ----------------------------------------------
-window.addEventListener("DOMContentLoaded", () => {
-    loadCurrentClass(studentID);
-});
-
-
 
 // ---------------------------
 // Navigation Buttons
 // ---------------------------
 document.getElementById("backBtn").addEventListener("click", () => window.location.href = "result-list.html");
+
+window.addEventListener("DOMContentLoaded", () => loadCurrentClass(studentID));
