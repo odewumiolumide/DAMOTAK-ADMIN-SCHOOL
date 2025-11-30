@@ -1,7 +1,7 @@
 // =============================
 // result.js - Updated to match current database
 // =============================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getDatabase, ref, get, child, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 // -----------------------------
@@ -16,7 +16,14 @@ const firebaseConfig = {
   messagingSenderId: "806502646085",
   appId: "1:806502646085:web:36a97f1d1e0ff4bab6be2c"
 };
-const app = initializeApp(firebaseConfig);
+
+// Fix for duplicate app error: Check if app already exists
+let app;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
 const db = getDatabase(app);
 
 // -----------------------------
@@ -142,7 +149,7 @@ classFilter.addEventListener("change", renderResults);
 termFilter.addEventListener("change", renderResults);
 
 // -----------------------------
-// Generate NECO/WASSCE PDF HTML (Print-Ready) - Fixed Margins
+// Generate Full NECO/WASSCE PDF HTML (Updated with complete template)
 // -----------------------------
 function generateNECOPDF(student, resultData) {
     const sessionYear = resultData.sessionYear || new Date().getFullYear();
@@ -198,7 +205,7 @@ function generateNECOPDF(student, resultData) {
     else if (avgScore >= 40) headRemarkAuto = "Satisfactory performance. There is room for improvement with more focus and effort.";
     else headRemarkAuto = "Performance needs attention. Extra effort and dedication are recommended to improve in the next term.";
 
-    // Affective & Psychomotor
+    // Affective & Psychomotor (assuming stored as properties in resultData)
     const Neatness = resultData.Neatness || "-";
     const Politeness = resultData.Politeness || "-";
     const Punctuality = resultData.Punctuality || "-";
@@ -207,54 +214,175 @@ function generateNECOPDF(student, resultData) {
     const Leadership = resultData.Leadership || "-";
     const Helping = resultData.Helping || "-";
 
-    // -----------------------------
-    // Return Full HTML with Fixed Margins
-    // -----------------------------
+    // Class Teacher Remark
+    const classRemark = resultData.classTeacherRemark || "-";
+
+    // Full HTML with your provided template
     return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Student Result | ${studentName}</title>
+<title>Student Result | Damotak International School</title>
 <style>
-  * { box-sizing: border-box; }
   body {
     font-family: "Segoe UI", "Calibri", sans-serif;
-    background: #fff;
+    background: linear-gradient(135deg, #f7f9fc, #eef2f7);
     color: #2c3e50;
-    margin: 0;
-    padding: 40px;
+    margin: 30px;
     line-height: 1.6;
-    width: calc(100% - 80px); /* padding left + right */
-    min-height: 100vh;
+    position: relative;
   }
-  .header, .row, table, .section-title { width: 100%; }
-  table { width: 100%; max-width: 100%; border-collapse: collapse; word-break: break-word; margin-bottom:25px; }
-  th, td { text-align:center; padding:6px; border:1px solid #eef2f7; font-size:13px; }
-  th { background:#1c3d72; color:#fff; }
-  tr:nth-child(even) td { background:#f9fbff; }
-  .row { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:25px; }
-  .col { flex:1; min-width:250px; background:#fff; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.07); padding:15px 20px; }
-  .col h4 { margin-bottom:8px; font-size:14px; text-transform:uppercase; color:#fff; background:#1c3d72; padding:5px 10px; border-radius:5px 5px 0 0; }
-  .col ul { list-style:none; padding:10px 0 0 0; margin:0; }
-  .col ul li { margin:4px 0; font-size:13px; }
-  .col ul li strong { color:#1c3d72; }
-  .section-title { font-weight:700; margin:25px 0 10px 0; font-size:16px; color:#1c3d72; text-transform:uppercase; border-left:5px solid #1c3d72; padding-left:10px; }
-  .signatures { display:flex; justify-content:space-between; margin-top:40px; }
-  .sign { border-top:2px solid #1c3d72; width:45%; text-align:center; padding-top:8px; font-size:13px; color:#1c3d72; font-weight:600; }
-  .signature-img { width:80px; height:auto; display:block; margin:0 auto 5px auto; opacity:0.9; }
-  @media print { body { -webkit-print-color-adjust: exact; } @page { size:A4; margin:1in; } }
+
+  /* Watermark */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 750px;
+    height: 750px;
+    background: url('assets/images/auth/Damotak Logo.png') no-repeat center center;
+    background-size: 60%;
+    opacity: 0.05;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+  }
+
+  .signatures {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.sign {
+    text-align: center;
+}
+
+.signature-img {
+    width: 80px;
+    height: auto;
+    display: block;
+    margin: 0 auto 5px auto; /* logo on top, small spacing */
+    opacity: 0.9;
+}
+
+.signature-line {
+    width: 150px;
+    height: 2px;
+    background: #000;
+    margin: 0 auto 5px auto;
+}
+
+.signature-title {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+
+
+  .school-logo {
+  border: 3px solid #0047AB; /* change color as you like */
+  border-radius: 12px;        /* rounded corners, 0 for sharp edges */
+  padding: 5px;               /* space between border and image */
+  width: 150px;               /* adjust size */
+  height: auto;               /* maintain aspect ratio */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* subtle shadow for sharp look */
+  display: block;             /* center with margin if needed */
+  margin: 20px auto;          /* centers image horizontally */
+}
+
+  .header {
+    text-align: center;
+    margin-bottom: 35px;
+    position: relative;
+  }
+  .header img { width: 100px; margin-bottom: 10px; }
+  .header h3 { margin: 5px 0; color: #1c3d72; text-transform: uppercase; letter-spacing: 1px; }
+  .header p { margin: 2px 0; font-size: 13px; }
+
+  .header::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 3px;
+    background: linear-gradient(to right, #1c3d72, #2a4d69);
+    border-radius: 5px;
+  }
+  
+  .col h4,
+.col ul {
+  text-transform: uppercase; /* Make text uppercase */
+}
+ 
+
+  .row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 25px; }
+  .col {
+    flex: 1; min-width: 250px; background: #fff;
+    border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+    padding: 15px 20px;
+  }
+  .col h4 { margin-bottom: 8px; font-size: 14px; text-transform: uppercase; color: #fff; background: #1c3d72; padding: 5px 10px; border-radius: 5px 5px 0 0; }
+  .col ul { list-style: none; padding: 10px 0 0 0; margin: 0; }
+  .col ul li { margin: 4px 0; font-size: 13px; }
+  .col ul li strong { color: #1c3d72; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin-bottom: 25px;
+    background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  th {
+    background: #1c3d72; color: #fff; padding: 6px; font-size: 13px; text-align: center;
+  }
+  td {
+    text-align: center; padding: 6px; border-bottom: 1px solid #eef2f7; font-size: 13px;
+  }
+  tr:nth-child(even) td { background: #f9fbff; }
+  .grade-tick { color: #1c3d72; font-size: 16px; }
+
+  .section-title {
+    font-weight: 700; margin: 25px 0 10px 0; font-size: 16px;
+    color: #1c3d72; text-transform: uppercase; letter-spacing: 0.5px;
+    border-left: 5px solid #1c3d72; padding-left: 10px;
+  }
+
+  .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
+  .sign {
+    border-top: 2px solid #1c3d72; width: 45%; text-align: center;
+    padding-top: 8px; font-size: 13px; color: #1c3d72; font-weight: 600;
+  }
+
+  @media print {
+    body { background: #fff; -webkit-print-color-adjust: exact; }
+    @page { size: A4; margin: 1cm; }
+  }
+    
+  #resultTable td:nth-child(2),
+  #resultTable th:nth-child(2),
+  #resultTableBody input[name="subject"],
+  #resultTableBody select[name="subject"] {
+    text-transform: uppercase !important;
+  }
+
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <div class="header">
-  <h2>Damotak International School</h2>
+  <img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
+
+ 
+  <h3>Damotak International School</h3>
+        <p>PRIMARY & JUNIOR SECONDARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+        <p>JUNIOR SECONDARY & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE,SCHEME. OSOGBO.</p>
+       <p>EMAIL: Damotakint@gmail.com </p>
+       <p>NUMBERS: 08033880730 | 08082870544 | 08132687701 </p>
   <p><strong>Academic Session:</strong> ${sessionYear}</p>
 </div>
 
-<!-- Student Details -->
 <div class="row">
   <div class="col">
     <h4>Student Details</h4>
@@ -294,17 +422,218 @@ ${subjectsHTML}
   <div class="col">
     <h4>Remarks</h4>
     <ul>
-      <li><strong>Class Teacher:</strong> ${student.classTeacherRemark || "-"}</li>
+      <li><strong>Class Teacher:</strong> ${classRemark}</li>
       <li><strong>Head Teacher:</strong> ${headRemarkAuto}</li>
     </ul>
   </div>
 </div>
 
+<!-- AFFECTIVE & PSYCHOMOTOR -->
+
+<div class="section-title">Affective & Psychomotor Domain (A - E)</div>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Area</th>
+
+<th>A</th>
+
+<th>B</th>
+
+<th>C</th>
+
+<th>D</th>
+
+<th>E</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td>Neatness</td>
+
+<td class="grade-tick">${Neatness=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Neatness=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Neatness=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Neatness=='D'?'✔️':''}</td
+// Continuation of the generateNECOPDF function
+
+<td class="grade-tick">${Neatness=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Politeness</td>
+
+<td class="grade-tick">${Politeness=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Politeness=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Politeness=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Politeness=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Politeness=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Punctuality</td>
+
+<td class="grade-tick">${Punctuality=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Punctuality=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Punctuality=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Punctuality=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Punctuality=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Responsibility</td>
+
+<td class="grade-tick">${Responsibility=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Responsibility=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Responsibility=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Responsibility=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Responsibility=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Teamwork</td>
+
+<td class="grade-tick">${Teamwork=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Teamwork=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Teamwork=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Teamwork=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Teamwork=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Leadership</td>
+
+<td class="grade-tick">${Leadership=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Leadership=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Leadership=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Leadership=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Leadership=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Helping Others</td>
+
+<td class="grade-tick">${Helping=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Helping=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Helping=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Helping=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Helping=='E'?'✔️':''}</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<!-- ADDITIONAL GRADING TABLES -->
+
+<div class="section-title">System Grading</div>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Grade</th>
+
+<th>Score Range</th>
+
+<th>Description</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr><td>A</td><td>75-100</td><td>Excellent</td></tr>
+
+<tr><td>B</td><td>60-74</td><td>Very Good</td></tr>
+
+<tr><td>C</td><td>50-59</td><td>Good</td></tr>
+
+<tr><td>D</td><td>40-49</td><td>Pass</td></tr>
+
+<tr><td>E</td><td>0-39</td><td>Fail</td></tr>
+
+</tbody>
+
+</table>
+
+<BR>
+
+<BR>
+
+<div class="signatures">
+
+    <div class="sign">
+        <img id="classTeacherSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
+        <div class="signature-title">Class Teacher’s Signature</div>
+    </div>
+
+    <div class="sign">
+        <img id="proprietorSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
+        <div class="signature-title">Proprietor’s Signature</div>
+    </div>
+
+</div>
+
+
 </body>
 </html>
 `;
 }
-
 
 // -----------------------------
 // Download All Displayed Students as PDF
@@ -319,13 +648,19 @@ printAllBtn.addEventListener("click", async () => {
   const pdf = new jspdf.jsPDF("p", "pt", "a4");
   let firstPage = true;
 
+  // Get selected class and term for file naming
+  const selectedClass = classFilter.value === "Classes" ? "All" : classFilter.value;
+  const selectedTerm = termFilter.value === "Terms" ? "All" : termFilter.value;
+  const fileName = `All_Results_${selectedClass}_${selectedTerm}.pdf`;
+
   for (let row of allRows) {
     const studentID = row.querySelector(".clickable").textContent;
     const studentSnap = await get(ref(db, `Students/${studentID}`));
     if (!studentSnap.exists()) continue;
     const student = studentSnap.val();
 
-    const resultSnap = await get(ref(db, `Results/${studentID}`));
+    // Fetch term-specific result data
+    const resultSnap = await get(ref(db, `Results/${studentID}/${student.term}`));
     const resultData = resultSnap.exists() ? resultSnap.val() : {};
 
     const htmlContent = generateNECOPDF(student, resultData);
@@ -349,7 +684,7 @@ printAllBtn.addEventListener("click", async () => {
     firstPage = false;
   }
 
-  pdf.save(`All_Students_Results.pdf`);
+  pdf.save(fileName);
   showNotification("✅ All student results downloaded successfully!", true);
 });
 

@@ -34,10 +34,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
     e.preventDefault();
 
     const className = document.getElementById("className").value.trim();
-    const classStream = document.getElementById("classStream").value.trim();
+    const SubjectTaken = document.getElementById("SubjectTaken").value.trim();
     const classTeacher = document.getElementById("classTeacher").value.trim();
 
-    if (!className || !classStream || !classTeacher) {
+    if (!className || !SubjectTaken || !classTeacher) {
       showNotification("⚠️ Please fill all fields before saving.", false);
       return;
     }
@@ -45,7 +45,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
     try {
       if (editMode && editClassId) {
         // ✅ UPDATE existing class
-        const newData = { className, classStream, classTeacher };
+        const newData = { className, SubjectTaken, classTeacher };
         await update(ref(db, "Classes/" + editClassId), newData);
 
         showNotification(`✏️ Class "${className}" updated successfully!`, true);
@@ -55,12 +55,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
       } else {
         // ✅ ADD new class
         const randomNum = Math.floor(1000 + Math.random() * 9000);
-        const classID = `${className}-${classStream}${randomNum}`.replace(/\s+/g, "").toLowerCase();
+        const classID = `${className}-${SubjectTaken}${randomNum}`.replace(/\s+/g, "").toLowerCase();
 
         const classData = {
           classID,
           className,
-          classStream,
+          SubjectTaken,
           classTeacher,
           createdAt: new Date().toISOString(),
         };
@@ -103,7 +103,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
         <div>
           <div class="d-flex align-items-center gap-10">
             <span class="w-12-px h-12-px bg-primary-600 rounded-circle fw-medium"></span>
-            <span class="text-secondary-light">${data.className} ${data.classStream}</span>
+            <span class="text-secondary-light">${data.className} ${data.SubjectTaken}</span>
           </div>
           <span class="text-primary-light fw-semibold text-md mt-4">${data.classTeacher}</span>
         </div>
@@ -148,7 +148,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
       const data = snapshot.val();
       document.getElementById("viewModalBody").innerHTML = `
         <p><strong>Class Name:</strong> ${data.className}</p>
-        <p><strong>Stream:</strong> ${data.classStream}</p>
+        <p><strong>SubjectTaken:</strong> ${data.SubjectTaken}</p>
         <p><strong>Teacher:</strong> ${data.classTeacher}</p>
         <p><strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}</p>`;
       new bootstrap.Modal(document.getElementById("viewModal")).show();
@@ -164,7 +164,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
       editClassId = id;
 
       document.getElementById("className").value = data.className;
-      document.getElementById("classStream").value = data.classStream;
+      document.getElementById("SubjectTaken").value = data.SubjectTaken;
       document.getElementById("classTeacher").value = data.classTeacher;
 
       new bootstrap.Modal(document.getElementById("exampleModal")).show();

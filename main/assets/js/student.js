@@ -2,7 +2,19 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
+// ===============================
+// 🚫 BLOCK NUMBERS IN studentName
+// ===============================
+const studentNameInput = document.getElementById("studentName");
+if (studentNameInput) {
+  studentNameInput.addEventListener("input", function () {
+    this.value = this.value.replace(/[0-9]/g, "");
+  });
+}
+
+// ===============================
 // ✅ Firebase Configuration
+// ===============================
 const firebaseConfig = {
   apiKey: "AIzaSyCz8GoyOi7wviejSPG2CGkOYvEwsaAWX0w",
   authDomain: "damotak-students-database.firebaseapp.com",
@@ -13,9 +25,18 @@ const firebaseConfig = {
   appId: "1:806502646085:web:36a97f1d1e0ff4bab6be2c"
 };
 
-// 🔥 Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// ===============================
+// 🔒 BLOCK TEXT IN PHONE NUMBER
+// ===============================
+const phoneInput = document.getElementById("studentPhone");
+if (phoneInput) {
+  phoneInput.addEventListener("input", function () {
+    this.value = this.value.replace(/[^0-9]/g, "");
+  });
+}
 
 // ----------------------
 // 🎓 Handle Student Registration
@@ -34,6 +55,11 @@ if (studentForm) {
 
     if (!name || !gender || !studentClass || !term) {
       showNotification("⚠️ Please fill in all required fields.", false);
+      return;
+    }
+
+    if (/\d/.test(name)) {
+      showNotification("⚠️ Student name cannot contain numbers.", false);
       return;
     }
 
@@ -57,9 +83,9 @@ if (studentForm) {
 
       showNotification(`✅ Student "${name}" added successfully!`, true);
       studentForm.reset();
-      renderStudents(); // Refresh table after adding
+      renderStudents();
     } catch (error) {
-      console.error("Error saving student:", error);
+      console.error(error);
       showNotification("❌ Failed to add student: " + error.message, false);
     }
   });
@@ -83,23 +109,23 @@ const studentsTableBody = document.getElementById("studentsTableBody");
 const classFilter = document.getElementById("classFilter");
 const searchInput = document.getElementById("searchInput");
 
-// Fetch students from Firebase
+// Fetch students
 async function fetchStudents() {
   try {
-    const dbRef = ref(db);
-    const snapshot = await get(child(dbRef, "Students"));
+    const snapshot = await get(child(ref(db), "Students"));
     return snapshot.exists() ? snapshot.val() : {};
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e);
     return {};
   }
 }
 
-// Render students in table
+// Render students
 async function renderStudents(filterClass = null, searchQuery = "") {
   if (!studentsTableBody) return;
 
   const allStudents = await fetchStudents();
+
   const students = Object.values(allStudents).filter(student => {
     const matchClass = !filterClass || filterClass === "Classes" || student.studentClass === filterClass;
     const matchSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -108,8 +134,10 @@ async function renderStudents(filterClass = null, searchQuery = "") {
 
   studentsTableBody.innerHTML = "";
   let count = 1;
+
   students.forEach(student => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td>
         <div class="d-flex align-items-center gap-10">
@@ -135,10 +163,9 @@ async function renderStudents(filterClass = null, searchQuery = "") {
       </td>
     `;
 
-    // Actions
-    tr.querySelector(".delete-btn").addEventListener("click", () => deleteStudent(student.studentID));
-    tr.querySelector(".edit-btn").addEventListener("click", () => openModal(student, true));
     tr.querySelector(".view-btn").addEventListener("click", () => openModal(student, false));
+    tr.querySelector(".edit-btn").addEventListener("click", () => openModal(student, true));
+    tr.querySelector(".delete-btn").addEventListener("click", () => deleteStudent(student.studentID));
 
     studentsTableBody.appendChild(tr);
   });
@@ -147,6 +174,7 @@ async function renderStudents(filterClass = null, searchQuery = "") {
 // Delete student
 async function deleteStudent(id) {
   if (!confirm("Are you sure you want to delete this student?")) return;
+
   await remove(ref(db, "Students/" + id));
   showNotification("✅ Student deleted successfully!", true);
   renderStudents(classFilter?.value, searchInput?.value);
@@ -158,42 +186,55 @@ function openModal(student, editable = false) {
   if (!modal) return;
 
   document.getElementById("studentModalTitle").textContent = editable ? "Edit Student" : "View Student";
+
   document.getElementById("modalStudentID").value = student.studentID;
   document.getElementById("modalStudentName").value = student.name;
   document.getElementById("modalStudentClass").value = student.studentClass;
   document.getElementById("modalStudentGender").value = student.gender;
 
+  // ✅ FIX: Load term safely
+  document.getElementById("modalStudentTerm").value = student.term || "";
+
+  // Enable or disable fields
   document.getElementById("modalStudentName").disabled = !editable;
   document.getElementById("modalStudentClass").disabled = !editable;
   document.getElementById("modalStudentGender").disabled = !editable;
+  document.getElementById("modalStudentTerm").disabled = !editable;
 
   new bootstrap.Modal(modal).show();
 }
 
-// Edit student form submit
+// ----------------------
+// 🟢 Handle Edit Submit (FULL FIXED VERSION)
+// ----------------------
 const editForm = document.getElementById("editStudentForm");
 if (editForm) {
   editForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const id = document.getElementById("modalStudentID").value;
+
     const updatedData = {
       studentID: id,
       name: document.getElementById("modalStudentName").value,
       studentClass: document.getElementById("modalStudentClass").value,
       gender: document.getElementById("modalStudentGender").value,
+      term: document.getElementById("modalStudentTerm").value, // ✅ FIX: Save term
       createdAt: new Date().toISOString(),
       active: true
     };
+
     await set(ref(db, "Students/" + id), updatedData);
+
     showNotification("✅ Student updated successfully!", true);
     renderStudents(classFilter?.value, searchInput?.value);
     bootstrap.Modal.getInstance(document.getElementById("studentModal")).hide();
   });
 }
 
-// Filter & Search events
+// Filter and Search
 classFilter?.addEventListener("change", () => renderStudents(classFilter.value, searchInput.value));
 searchInput?.addEventListener("input", () => renderStudents(classFilter.value, searchInput.value));
 
-// Initial render
+// Initial load
 renderStudents();

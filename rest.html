@@ -313,3 +313,390 @@
   
 </body>
 </html>
+
+// ---------------------------
+// Global Variables
+// ---------------------------
+let studentName = "";
+let studentGender = "";
+let studentClass = "";
+let sessionYear = "";
+let term = "Yearly Summary";
+let avgScore = 0;
+let totalScoreValue = 0;
+let promotionStatus = "";
+let currentViewedStudentID = null;
+
+// ---------------------------
+// Print Result Function
+// ---------------------------
+document.getElementById("printButton").addEventListener("click", () => {
+    studentName = document.getElementById("studentName")?.value || document.getElementById("studentName")?.textContent || "-";
+    studentGender = document.getElementById("studentGender")?.value || document.getElementById("studentGender")?.textContent || "-";
+    studentClass = document.getElementById("studentClass")?.value || document.getElementById("studentClass")?.textContent || "-";
+    sessionYear = document.getElementById("sessionYear")?.value || document.getElementById("sessionYear")?.textContent || "-";
+    promotionStatus = document.getElementById("promotionStatus")?.value || "-";
+    
+    const resultTable = document.getElementById("yearlySummaryTable").cloneNode(true);
+
+    const printWindow = window.open("", "_blank", "width=900,height=1000");
+    printWindow.document.open();
+    printWindow.document.write(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Result | Damotak International School</title>
+<style>
+body { font-family: "Segoe UI", "Calibri", sans-serif; margin: 30px; line-height: 1.6; color: #2c3e50; position: relative; background: #f7f9fc; }
+body::before { content: ""; position: fixed; top:50%; left:50%; width:750px; height:750px; background: url('assets/images/auth/Damotak Logo.png') no-repeat center center; background-size:60%; opacity:0.05; transform: translate(-50%, -50%); z-index:-1; }
+.school-logo { border: 3px solid #0047AB; border-radius: 12px; padding: 5px; width: 150px; height:auto; display:block; margin:20px auto; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
+.header { text-align:center; margin-bottom:35px; position:relative; }
+.header h3 { margin:5px 0; color:#1c3d72; text-transform:uppercase; letter-spacing:1px; }
+.header p { margin:2px 0; font-size:13px; }
+.header::after { content:""; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:80%; height:3px; background: linear-gradient(to right, #1c3d72, #2a4d69); border-radius:5px; }
+.col h4, .col ul { text-transform: uppercase; }
+.row { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:25px; }
+.col { flex:1; min-width:250px; background:#fff; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.07); padding:15px 20px; }
+.col h4 { margin-bottom:8px; font-size:14px; text-transform:uppercase; color:#fff; background:#1c3d72; padding:5px 10px; border-radius:5px 5px 0 0; }
+.col ul { list-style:none; padding:10px 0 0 0; margin:0; }
+.col ul li { margin:4px 0; font-size:13px; }
+.col ul li strong { color:#1c3d72; }
+table { width:100%; border-collapse:collapse; margin-bottom:25px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
+th { background:#1c3d72; color:#fff; padding:6px; font-size:13px; text-align:center; }
+td { text-align:center; padding:6px; border-bottom:1px solid #eef2f7; font-size:13px; }
+tr:nth-child(even) td { background:#f9fbff; }
+.section-title { font-weight:700; margin:25px 0 10px 0; font-size:16px; color:#1c3d72; text-transform:uppercase; letter-spacing:0.5px; border-left:5px solid #1c3d72; padding-left:10px; }
+.signatures { display:flex; justify-content:space-between; margin-top:40px; }
+.sign { border-top:2px solid #1c3d72; width:45%; text-align:center; padding-top:8px; font-size:13px; color:#1c3d72; font-weight:600; }
+@media print { body { background:#fff; -webkit-print-color-adjust: exact; } @page { size:A4; margin:1cm; } }
+ .signatures {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.sign {
+    text-align: center;
+}
+
+.signature-img {
+    width: 80px;
+    height: auto;
+    display: block;
+    margin: 0 auto 5px auto; /* logo on top, small spacing */
+    opacity: 0.9;
+}
+
+.signature-line {
+    width: 150px;
+    height: 2px;
+    background: #000;
+    margin: 0 auto 5px auto;
+}
+
+.signature-title {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+
+</style>
+</head>
+<body>
+<div class="header">
+<img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
+<h3>Damotak International School</h3>
+<p>PRIMARY & JUNIOR SECONDARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+<p>JUNIOR SECONDARY & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE,SCHEME. OSOGBO.</p>
+<p>EMAIL: Damotakint@gmail.com </p>
+<p>NUMBERS: 08033880730 | 08082870544 | 08132687701 </p>
+<p><strong>Academic Session:</strong> ${sessionYear}</p>
+</div>
+
+<div class="row">
+<div class="col">
+<h4>Student Details</h4>
+<ul>
+<li><strong>Name:</strong> ${studentName}</li>
+<li><strong>Gender:</strong> ${studentGender}</li>
+<li><strong>Class:</strong> ${studentClass}</li>
+<li><strong>Term:</strong> ${term}</li>
+<li><strong>Student ID:</strong> ${studentID}</li>
+<li><strong>Date Issued:</strong> ${new Date().toLocaleDateString()}</li>
+</ul>
+</div>
+</div>
+
+<div class="section-title">Subjects and Scores</div>
+${resultTable.outerHTML}
+
+<div class="row">
+<div class="col">
+<h4>Summary</h4>
+<ul>
+<li><strong>Total Marks:</strong> ${totalScoreValue}</li>
+<li><strong>Average Score:</strong> ${avgScore}%</li>
+</ul>
+</div>
+<div class="col">
+<h4>Promotion Status</h4>
+<ul>
+<li><strong>Promotion Status:</strong> ${promotionStatus}</li>
+</ul>
+</div>
+</div>
+
+<div class="signatures">
+
+    <div class="sign">
+        <img id="classTeacherSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
+        <div class="signature-title">Class Teacher’s Signature</div>
+    </div>
+
+    <div class="sign">
+        <img id="proprietorSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
+        <div class="signature-title">Proprietor’s Signature</div>
+    </div>
+
+</div>
+
+</body>
+</html>
+    `);
+    printWindow.document.close();
+
+    printWindow.onload = () => {
+        const fileTitle = `${studentName.replace(/\s+/g, "_")}_${studentID}_Result`;
+        printWindow.document.title = fileTitle;
+
+            printWindow.document.getElementById("classTeacherSignatureImg").src =
+    "assets/images/auth/Damotak Logo.png";
+
+printWindow.document.getElementById("proprietorSignatureImg").src =
+    "assets/images/auth/Damotak Logo.png";
+
+        setTimeout(() => { printWindow.focus(); printWindow.print(); }, 1000);
+        printWindow.onafterprint = printWindow.onbeforeunload = () => {
+            printWindow.close();
+            location.href = "result-add.html";
+        };
+    };
+});
+
+// ---------------------------
+// Session Dates (Single Session - Hardcoded)
+// ---------------------------
+const currentSession = {
+    startDate: new Date("11-20-2025"),
+    endDate: new Date("11-28-2025")
+};
+
+// ---------------------------
+// Load Yearly Summary
+// ---------------------------
+async function loadYearlySummary(studentIDParam, studentClassParam) {
+    const studentID = studentIDParam;
+    const studentClass = studentClassParam;
+
+    yearlySummaryBody.innerHTML = "";
+    const terms = ["First Term", "Second Term", "Third Term"];
+    const termResults = {};
+    let totalScore = 0;
+    let subjectCount = 0;
+
+    for (let term of terms) {
+        const snapshot = await get(ref(resultDb, `Results/${studentID}/${studentClass}/${term}`));
+        termResults[term] = snapshot.exists() ? snapshot.val().Subjects || {} : {};
+    }
+
+    // Combine all subjects from all terms
+    const subjectSet = new Set();
+    terms.forEach(term => Object.keys(termResults[term] || {}).forEach(sub => subjectSet.add(sub.trim())));
+    const allSubjects = Array.from(subjectSet);
+
+    // Populate table
+    allSubjects.forEach((subjectKey, index) => {
+        const firstN = Number(termResults["First Term"][subjectKey]?.total || 0);
+        const secondN = Number(termResults["Second Term"][subjectKey]?.total || 0);
+        const thirdN = Number(termResults["Third Term"][subjectKey]?.total || 0);
+
+        const avgTotal = ((firstN + secondN + thirdN) / 3).toFixed(2);
+        totalScore += parseFloat(avgTotal);
+        subjectCount++;
+
+        let grade, remark;
+        if (avgTotal >= 70) { grade = "A"; remark = "Excellent"; }
+        else if (avgTotal >= 60) { grade = "B"; remark = "Very Good"; }
+        else if (avgTotal >= 50) { grade = "C"; remark = "Good"; }
+        else if (avgTotal >= 40) { grade = "D"; remark = "Fair"; }
+        else { grade = "F"; remark = "Fail"; }
+
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${index+1}</td><td>${subjectKey}</td><td>${firstN}</td><td>${secondN}</td><td>${thirdN}</td><td>${avgTotal}</td><td>${grade}</td><td>${remark}</td>`;
+        yearlySummaryBody.appendChild(row);
+    });
+
+    if (allSubjects.length === 0) {
+        yearlySummaryBody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#d9534f;font-weight:bold;">ℹ️ No previous result found.</td></tr>`;
+    }
+
+    const overallAverage = subjectCount ? (totalScore / subjectCount).toFixed(2) : 0;
+
+    if (overallAverage >= 80) promotionStatus = "Promoted to the Next Class with Distinction";
+    else if (overallAverage >= 50) promotionStatus = "Promoted to the Next Class";
+    else if (overallAverage >= 40) promotionStatus = "Promotion on Trial";
+    else promotionStatus = "Fail";
+
+    totalScoreValue = totalScore;
+    avgScore = overallAverage;
+
+    if (currentViewedStudentID === studentID) {
+        document.getElementById("promotionStatus").value = promotionStatus;
+    }
+
+    return { promotionStatus, overallAverage: overallAverage, totalScore };
+}
+
+// ---------------------------
+// Handle Promotion
+// ---------------------------
+async function handlePromotion(studentID, currentClass) {
+    if (!promotionStatus) return;
+
+    if (promotionStatus === "Fail") {
+        console.log(`Student ${studentID} repeats the same class`);
+        await archiveResults(studentID, currentClass, currentClass);
+        await set(ref(resultDb, `Results/${studentID}/currentClass`), currentClass);
+    } else {
+        const nextClass = getNextClass(currentClass);
+        console.log(`Student ${studentID} moves to next class: ${nextClass}`);
+        await archiveResults(studentID, currentClass, nextClass);
+        await createNewSession(studentID, nextClass);
+        await set(ref(resultDb, `Results/${studentID}/currentClass`), nextClass);
+        if (currentViewedStudentID === studentID) {
+            document.getElementById("studentClass").textContent = nextClass;
+            yearlySummaryBody.innerHTML = ""; // clear old data
+        }
+    }
+}
+
+// ---------------------------
+// Archive Old Results
+// ---------------------------
+async function archiveResults(studentID, oldClass, newClassOrSame) {
+    try {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-'); // safe for Firebase
+        const archivePath = `ArchivedResults/${studentID}/${oldClass}_${timestamp}`;
+        const oldDataSnap = await get(ref(resultDb, `Results/${studentID}/${oldClass}`));
+        if (oldDataSnap.exists()) {
+            await set(ref(resultDb, archivePath), oldDataSnap.val());
+            await remove(ref(resultDb, `Results/${studentID}/${oldClass}`)); // remove old data
+            console.log("Results archived to:", archivePath);
+        }
+    } catch (err) {
+        console.error("Archive error:", err);
+    }
+}
+
+// ---------------------------
+// Create New Session Structure
+// ---------------------------
+async function createNewSession(studentID, nextClass) {
+    const basePath = `Results/${studentID}/${nextClass}`;
+    const terms = ["First Term", "Second Term", "Third Term"];
+    for (let term of terms) {
+        await set(ref(resultDb, `${basePath}/${term}/Subjects`), {});
+        await set(ref(resultDb, `${basePath}/${term}/Affective`), {});
+        await set(ref(resultDb, `${basePath}/${term}/Remarks`), "");
+    }
+    await set(ref(resultDb, `${basePath}/Yearly Summary`), {});
+    console.log(`New session created for ${studentID} - ${nextClass}`);
+}
+
+// ---------------------------
+// Get Next Class
+// ---------------------------
+function getNextClass(currentClass) {
+    const classes = ["Creche","Nursery 1","Nursery 2","Primary 1","Primary 2","Primary 3","Primary 4","Primary 5","JSS 1","JSS 2","JSS 3","SSS 1","SSS 2","SSS 3"];
+    const index = classes.indexOf(currentClass);
+    if (index >= 0 && index < classes.length - 1) return classes[index+1];
+    if (index === classes.length - 1) return "Graduate";
+    return currentClass;
+}
+
+// ---------------------------
+// Auto-Promote All Students Based on System Date
+// ---------------------------
+async function autoPromoteAllStudents() {
+    const today = new Date();
+    const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endZero = new Date(currentSession.endDate.getFullYear(), currentSession.endDate.getMonth(), currentSession.endDate.getDate());
+    if (todayZero < endZero) return;
+
+    try {
+        const studentsSnap = await get(ref(studentDb, "Students"));
+        if (!studentsSnap.exists()) return;
+        const students = studentsSnap.val();
+
+        for (const studentID in students) {
+            const currentClassSnap = await get(ref(resultDb, `Results/${studentID}/currentClass`));
+            const currentClass = currentClassSnap.exists() ? currentClassSnap.val() : null;
+            if (!currentClass) continue;
+
+            currentViewedStudentID = studentID;
+            await loadYearlySummary(studentID, currentClass);
+            await handlePromotion(studentID, currentClass);
+        }
+
+        console.log("✅ All eligible students auto-promoted based on system date.");
+    } catch (err) {
+        console.error("Auto-promotion error:", err);
+    }
+}
+
+// ---------------------------
+// Load Current Class
+// ---------------------------
+async function loadCurrentClass(studentID) {
+    currentViewedStudentID = studentID;
+
+    try {
+        const studentSnap = await get(ref(studentDb, `Students/${studentID}`));
+        if (!studentSnap.exists()) throw new Error("Student not found");
+        const studentData = studentSnap.val();
+        const currentClass = studentData.studentClass || studentData.className || "Unknown";
+
+        document.getElementById("studentName").textContent = studentData.name || "Unknown";
+        document.getElementById("studentGender").textContent = studentData.gender || "Unknown";
+        document.getElementById("studentClass").textContent = currentClass;
+
+        await set(ref(resultDb, `Results/${studentID}/currentClass`), currentClass);
+        await loadYearlySummary(studentID, currentClass);
+    } catch (err) {
+        console.error("Failed to load student class info:", err);
+    }
+}
+
+// ---------------------------
+// Clear Inputs
+// ---------------------------
+function clearInputs() {
+    const inputs = document.querySelectorAll("input[type='text'], input[type='number'], select, textarea");
+    inputs.forEach(input => input.value = "");
+}
+
+// ---------------------------
+// Run Auto-Promotion on Page Load
+// ---------------------------
+autoPromoteAllStudents();
+
+// ---------------------------
+// Navigation Buttons
+// ---------------------------
+document.getElementById("backBtn").addEventListener("click", () => window.location.href = "result-list.html");
+
+window.addEventListener("DOMContentLoaded", () => loadCurrentClass(studentID));
+
