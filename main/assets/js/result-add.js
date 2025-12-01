@@ -95,34 +95,135 @@ document.getElementById("studentTerm").addEventListener("change", async (e) => {
   }
 });
 
-// ---------------------------
-// Load Student Info
-// ---------------------------
+// ======================================================
+// LOAD STUDENT INFO + AUTO LOAD SUBJECTS
+// ======================================================
+
 let isSS3 = false;
 
 async function loadStudent() {
   try {
     const snap = await get(ref(studentDb, `Students/${studentID}`));
-    if (snap.exists()) {
-      const data = snap.val();
-      document.getElementById("studentName").textContent = data.name || "N/A";
-      document.getElementById("studentClass").textContent = data.studentClass || "N/A";
-      document.getElementById("studentGender").textContent = data.gender || "N/A";
 
-      // Detect SS3 (Supports both SS3 and SSS 3)
-      const normalizedClass = data.studentClass.replace(/\s+/g, '').toUpperCase();
-      isSS3 = (normalizedClass === "SSS3");
-
-      console.log("SS3 Class Detected:", isSS3);
-
-    } else {
+    if (!snap.exists()) {
       showNotification("❌ Student not found!", false);
+      return;
     }
+
+    const data = snap.val();
+
+    document.getElementById("studentName").textContent = data.name || "N/A";
+    document.getElementById("studentClass").textContent = data.studentClass || "N/A";
+    document.getElementById("studentGender").textContent = data.gender || "N/A";
+
+    // Detect SS3
+    const normalizedClass = data.studentClass.replace(/\s+/g, "").toUpperCase();
+    isSS3 = (normalizedClass === "SS3" || normalizedClass === "SSS3");
+
+    console.log("SS3 Detected:", isSS3);
+
+    // Load subjects for class
+    loadDefaultSubjectsForClass(data.studentClass);
+
   } catch (err) {
     showNotification("⚠️ Error loading student info: " + err.message, false);
   }
 }
 
+
+
+// ======================================================
+// AUTO LOAD SUBJECTS BASED ON CLASS
+// ======================================================
+
+function loadDefaultSubjectsForClass(studentClass) {
+  if (!studentClass) return;
+
+  const cls = studentClass.trim().toLowerCase();
+  tbody.innerHTML = ""; // Clear table
+
+  if (defaultSubjects[cls]) {
+    defaultSubjects[cls].forEach(sub => addSubjectRow(sub));
+    console.log(`Loaded default subjects for class: ${cls}`);
+  } else {
+    console.log(`No default subjects found for class: ${cls}`);
+  }
+}
+
+// ======================================================
+// DEFAULT SUBJECT LISTS FOR EACH CLASS
+// ======================================================
+
+const defaultSubjects = {
+  "creche": [
+    "Practical Life",
+    "Sensorial Education",
+    "Fine Motor Skills",
+    "Rymes & Songs",
+    "Bible Knowledge",
+    "Arts & Crafts"
+  ],
+
+  "nursery 1": [
+    "Number Concepts",
+    "Language Skills",
+    "Basic Science",
+    "Social Habits",
+    "Health Habits",
+    "Practical Life",
+    "Sensorial Education",
+    "Fine Motor Skills",
+    "Bible Knowledge",
+    "Newstalk",
+    "Computer Technology",
+    "Rymes & Songs",
+    "Arts & Crafts",
+    "Character Education"
+  ],
+
+  "nursery 2": [
+    "Number Concepts",
+    "Language Skills",
+    "Basic Science",
+    "Social Habits",
+    "Health Habits",
+    "Practical Life",
+    "Sensorial Education",
+    "Fine Motor Skills",
+    "Bible Knowledge",
+    "Computer Technology",
+    "Rymes & Songs",
+    "Arts & Crafts"
+  ],
+
+  "primary 1": [
+    "Mathematics",
+    "English Studies",
+    "Quantitative Reasoning",
+    "Verbal Reasoning",
+    "Basic Science",
+    "Civic Education",
+    "Physical Health Education",
+    "Creative Arts"
+  ],
+
+  "primary 2": ["Mathematics", "English Studies"],
+  "primary 3": ["Mathematics", "English Studies"],
+  "primary 4": ["Mathematics", "English Studies"],
+  "primary 5": ["Mathematics", "English Studies"],
+
+  "jss 1": ["Mathematics", "English", "Basic Science", "Social Studies"],
+  "jss 2": ["Mathematics", "English", "Basic Science", "Social Studies"],
+  "jss 3": ["Mathematics", "English", "Basic Science", "Social Studies"],
+
+  "sss 1": ["Mathematics", "English", "Biology", "Chemistry", "Physics"],
+  "sss 2": ["Mathematics", "English", "Biology", "Chemistry", "Physics"],
+  "sss 3": ["Mathematics", "English", "Biology", "Chemistry", "Physics"]
+};
+
+// ======================================================
+// START
+// ======================================================
 loadStudent();
 
 
@@ -382,14 +483,26 @@ async function loadPreviousResults() {
 
   try {
     const snapshot = await get(ref(resultDb, `Results/${studentID}/${term}`));
-    tbody.innerHTML = "";
 
     if (snapshot.exists()) {
+      // Only clear table when actual saved results exist
+      tbody.innerHTML = "";
+
       const data = snapshot.val();
       const subjects = data.Subjects || {};
+
       Object.keys(subjects).forEach(sub => {
         const s = subjects[sub];
-        addSubjectRow(s.subject || sub, s.ca1 || 0, s.ca2 || 0, s.exam || 0, s.total || 0, s.grade || "-", s.remark || "-", true);
+        addSubjectRow(
+          s.subject || sub,
+          s.ca1 || 0,
+          s.ca2 || 0,
+          s.exam || 0,
+          s.total || 0,
+          s.grade || "-",
+          s.remark || "-",
+          true
+        );
       });
 
       document.getElementById("classTeacherRemark").value = data.classTeacherRemark || "";
@@ -411,8 +524,11 @@ async function loadPreviousResults() {
       document.getElementById("nextTermDate").value = data.nextTermDate || "";
 
       showNotification("✅ Loaded previous results!", true);
+
     } else {
-      addSubjectRow();
+      // DO NOT CLEAR THE TABLE HERE
+      // DO NOT REMOVE DEFAULT SUBJECTS
+
       showNotification("ℹ️ No previous result found.", false);
     }
   } catch (err) {
@@ -423,6 +539,7 @@ async function loadPreviousResults() {
 
 document.getElementById("studentTerm").addEventListener("change", loadPreviousResults);
 window.addEventListener("load", () => setTimeout(loadPreviousResults, 200));
+
 
 // ---------------------------
 // Save Result (Updated for SS3 & Normal Classes)
