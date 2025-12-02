@@ -122,7 +122,7 @@ async function loadStudent() {
 
     console.log("SS3 Detected:", isSS3);
 
-    // Load subjects for class
+    // Load subjects
     loadDefaultSubjectsForClass(data.studentClass);
 
   } catch (err) {
@@ -133,7 +133,7 @@ async function loadStudent() {
 
 
 // ======================================================
-// AUTO LOAD SUBJECTS BASED ON CLASS
+// AUTO LOAD SUBJECTS BASED ON CLASS + ORDERING LOGIC
 // ======================================================
 
 function loadDefaultSubjectsForClass(studentClass) {
@@ -142,89 +142,183 @@ function loadDefaultSubjectsForClass(studentClass) {
   const cls = studentClass.trim().toLowerCase();
   tbody.innerHTML = ""; // Clear table
 
-  if (defaultSubjects[cls]) {
-    defaultSubjects[cls].forEach(sub => addSubjectRow(sub));
-    console.log(`Loaded default subjects for class: ${cls}`);
-  } else {
+  if (!defaultSubjects[cls]) {
     console.log(`No default subjects found for class: ${cls}`);
+    return;
   }
+
+  // Original subject list
+  const subjects = [...defaultSubjects[cls]];
+
+  // Force Mathematics + English first
+  const math = subjects.filter(s => s.toLowerCase().includes("math"));
+  const eng = subjects.filter(s => s.toLowerCase().includes("english") || s.toLowerCase() === "english");
+
+  // Remove them if found
+  const remaining = subjects.filter(s =>
+    !math.includes(s) &&
+    !eng.includes(s)
+  );
+
+  // Sort remaining alphabetically
+  remaining.sort((a, b) => a.localeCompare(b));
+
+  // Final ordered list
+  const orderedSubjects = [...math, ...eng, ...remaining];
+
+  // Add to table
+  orderedSubjects.forEach(sub => addSubjectRow(sub));
+
+  console.log("Subjects Loaded in Order:", orderedSubjects);
 }
+
+
 
 // ======================================================
 // DEFAULT SUBJECT LISTS FOR EACH CLASS
+// (unchanged – same as you provided)
 // ======================================================
 
 const defaultSubjects = {
-  "creche": [
-    "Practical Life",
-    "Sensorial Education",
-    "Fine Motor Skills",
-    "Rymes & Songs",
-    "Bible Knowledge",
-    "Arts & Crafts"
+  "pre nusery": [
+    "English (letter work)",
+    "Mathematics (Number work)",
+    "Social Habit",
+    "Health Habit",
+    "Diction ",
+    "PHE",
+    "Elementary Science",
+    "Rhymes",
+    "Writing",
+    "Fine Art/ colour"
   ],
 
-  "nursery 1": [
-    "Number Concepts",
-    "Language Skills",
-    "Basic Science",
-    "Social Habits",
-    "Health Habits",
-    "Practical Life",
-    "Sensorial Education",
-    "Fine Motor Skills",
-    "Bible Knowledge",
-    "Newstalk",
-    "Computer Technology",
-    "Rymes & Songs",
-    "Arts & Crafts",
-    "Character Education"
+  "pre-basic 1": [
+    "English (letter work)",
+    "Mathematics (Number work)",
+    "Social Habit",
+    "Health Habit",
+    "Diction ",
+    "PHE",
+    "Elementary Science",
+    "Rhymes",
+    "Writing",
+    "Fine Art/ colour",
+    "QR",
+    "VR",
+    "Literature",
+    "Dictation"
   ],
 
-  "nursery 2": [
-    "Number Concepts",
-    "Language Skills",
-    "Basic Science",
-    "Social Habits",
-    "Health Habits",
-    "Practical Life",
-    "Sensorial Education",
-    "Fine Motor Skills",
-    "Bible Knowledge",
-    "Computer Technology",
-    "Rymes & Songs",
-    "Arts & Crafts"
+  "pre-basic 2": [
+    "English (letter work)",
+    "Mathematics (Number work)",
+    "Social Habit",
+    "Health Habit",
+    "Diction ",
+    "PHE",
+    "Elementary Science",
+    "Rhymes",
+    "Writing",
+    "Fine Art/ colour",
+    "QR",
+    "VR",
+    "Literature",
+    "Dictation"
   ],
 
-  "primary 1": [
-    "Mathematics",
-    "English Studies",
-    "Quantitative Reasoning",
-    "Verbal Reasoning",
-    "Basic Science",
-    "Civic Education",
-    "Physical Health Education",
-    "Creative Arts"
+  "pre-basic 3": [
+    "English (letter work)",
+    "Mathematics (Number work)",
+    "Social Habit",
+    "Health Habit",
+    "Diction ",
+    "PHE",
+    "Elementary Science",
+    "Rhymes",
+    "Writing",
+    "Fine Art/ colour",
+    "QR",
+    "VR",
+    "Literature",
+    "Dictation"
   ],
 
-  "primary 2": ["Mathematics", "English Studies"],
-  "primary 3": ["Mathematics", "English Studies"],
-  "primary 4": ["Mathematics", "English Studies"],
-  "primary 5": ["Mathematics", "English Studies"],
+  "basic 1": [
+    "Mathematics", "English Studies", "Diction", "BST", "Literature",
+    "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
+    "Yoruba", "NVE", "History", "Dictation", "Writing"
+  ],
 
-  "jss 1": ["Mathematics", "English", "Basic Science", "Social Studies"],
-  "jss 2": ["Mathematics", "English", "Basic Science", "Social Studies"],
-  "jss 3": ["Mathematics", "English", "Basic Science", "Social Studies"],
+  "basic 2": [
+    "Mathematics", "English Studies", "Diction", "BST", "Literature",
+    "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
+    "Yoruba", "NVE", "History", "Dictation", "Writing"
+  ],
 
-  "sss 1": ["Mathematics", "English", "Biology", "Chemistry", "Physics"],
-  "sss 2": ["Mathematics", "English", "Biology", "Chemistry", "Physics"],
-  "sss 3": ["Mathematics", "English", "Biology", "Chemistry", "Physics"]
+  "basic 3": [
+    "Mathematics", "English Studies", "Diction", "BST", "Literature",
+    "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
+    "Yoruba", "NVE", "History", "Dictation", "Writing"
+  ],
+
+  "basic 4": [
+    "Mathematics", "English Studies", "Diction", "PVS", "BST",
+    "Literature ", "Quatitative Reasoning", "Verbal Reasoning",
+    "CCA", "CRS", "Yoruba", "NVE", "History", "Dictation", "Writing"
+  ],
+
+  "basic 5": [
+    "Mathematics", "English Studies", "Diction", "PVS", "BST",
+    "Literature ", "Quatitative Reasoning", "Verbal Reasoning",
+    "CCA", "CRS", "Yoruba", "NVE", "History", "Dictation", "Writing"
+  ],
+
+  "jss 1": [
+    "Mathematics", "English", "Physical and Health Education (PHE)",
+    "Business studies (BS)", "Social and citizenship studies",
+    "Basic Science and Technology (BST)", "Christian Religion Studies (CRS)",
+    "Cultural and creative Art (CCA)", "Nigerian History", "Diction",
+    "Digital Technology", "Dictation", "Yoruba"
+  ],
+
+  "jss 2": [
+    "Mathematics", "English", "Pre- vocational studies (PVS)",
+    "Business studies (BS)", "National Value Education (NVE)",
+    "Basic Science and Technology (BST)", "Christian Religion Studies (CRS)",
+    "Cultural and creative Art (CCA)", "Nigerian History", "Diction",
+    "Information and Communication Technology (ICT)", "Dictation", "Yoruba"
+  ],
+
+  "jss 3": [
+    "Mathematics", "English", "Pre- vocational studies (PVS)",
+    "Business studies (BS)", "National Value Education (NVE)",
+    "Basic Science and Technology (BST)", "Christian Religion Studies (CRS)",
+    "Cultural and creative Art (CCA)", "Nigerian History", "Diction",
+    "Information and Communication Technology (ICT)", "Dictation", "Yoruba"
+  ],
+
+  "sss 1": [
+    "Mathematics", "English", "Citizenship and Heritage Studies (CHS)",
+    "Economics", "Digital Technology", "Phonics"
+  ],
+
+  "sss 2": [
+    "Mathematics", "English", "Civic- Education", "ICT", "Phonics"
+  ],
+
+  "sss 3": [
+    "Mathematics", "English", "Civic- Education", "ICT", "Phonics"
+  ]
 };
+
+
 
 // ======================================================
 // START
 // ======================================================
 loadStudent();
+
 
 
 // ---------------------------
@@ -475,7 +569,7 @@ remarkFields.forEach((id, index) => {
 
 
 // ---------------------------
-// Load Previous Results
+// Load Previous Results (With Subject Order Preserved)
 // ---------------------------
 async function loadPreviousResults() {
   const term = document.getElementById("studentTerm")?.value?.trim();
@@ -484,17 +578,23 @@ async function loadPreviousResults() {
   try {
     const snapshot = await get(ref(resultDb, `Results/${studentID}/${term}`));
 
+    const studentClass = document.getElementById("studentClass").textContent.trim().toLowerCase();
+    const classSubjects = defaultSubjects[studentClass] || [];
+
     if (snapshot.exists()) {
-      // Only clear table when actual saved results exist
-      tbody.innerHTML = "";
-
       const data = snapshot.val();
-      const subjects = data.Subjects || {};
+      const savedSubjects = data.Subjects || {};
 
-      Object.keys(subjects).forEach(sub => {
-        const s = subjects[sub];
+      tbody.innerHTML = ""; // Clear table
+
+      console.log("Subjects Loaded in Order:", classSubjects);
+
+      // LOAD SUBJECTS USING YOUR CLASS ORDER
+      classSubjects.forEach(subName => {
+        const s = savedSubjects[subName] || {};
+
         addSubjectRow(
-          s.subject || sub,
+          subName,
           s.ca1 || 0,
           s.ca2 || 0,
           s.exam || 0,
@@ -505,6 +605,7 @@ async function loadPreviousResults() {
         );
       });
 
+      // LOAD AFFECTIVE + OTHERS
       document.getElementById("classTeacherRemark").value = data.classTeacherRemark || "";
       document.getElementById("headTeacherRemark").value = data.headTeacherRemark || "";
       document.getElementById("Neatness").value = data.Neatness || "";
@@ -526,9 +627,7 @@ async function loadPreviousResults() {
       showNotification("✅ Loaded previous results!", true);
 
     } else {
-      // DO NOT CLEAR THE TABLE HERE
-      // DO NOT REMOVE DEFAULT SUBJECTS
-
+      // DO NOT CLEAR SUBJECTS
       showNotification("ℹ️ No previous result found.", false);
     }
   } catch (err) {
@@ -540,6 +639,35 @@ async function loadPreviousResults() {
 document.getElementById("studentTerm").addEventListener("change", loadPreviousResults);
 window.addEventListener("load", () => setTimeout(loadPreviousResults, 200));
 
+
+function loadSubjectsInCorrectOrder(subjectData, defaultOrderArray) {
+    let finalOrdered = [];
+
+    // 1. Force Mathematics first
+    const mathKey = Object.keys(subjectData).find(s =>
+        s.toLowerCase().includes("math")
+    );
+    if (mathKey) finalOrdered.push(mathKey);
+
+    // 2. Force English second (English / English Studies)
+    const engKey = Object.keys(subjectData).find(s =>
+        s.toLowerCase().startsWith("english")
+    );
+    if (engKey && engKey !== mathKey) finalOrdered.push(engKey);
+
+    // 3. Load other subjects FOLLOWING default class order
+    defaultOrderArray.forEach(sub => {
+        if (subjectData[sub] && sub !== mathKey && sub !== engKey) {
+            finalOrdered.push(sub);
+        }
+    });
+
+    // 4. Render subjects to table
+    tbody.innerHTML = "";  
+    finalOrdered.forEach(sub => addSubjectRow(sub));
+
+    console.log("Subjects Loaded in Order:", finalOrdered);
+}
 
 // ---------------------------
 // Save Result (Updated for SS3 & Normal Classes)
@@ -1131,11 +1259,10 @@ ${resultTable.outerHTML}
       const fileTitle = `${studentName.replace(/\s+/g, "_")}_${studentID}_Result`;
       printWindow.document.title = fileTitle;
 
-     printWindow.document.getElementById("classTeacherSignatureImg").src =
-    "assets/images/auth/Damotak Logo.png";
+     
 
 printWindow.document.getElementById("proprietorSignatureImg").src =
-    "assets/images/auth/Damotak Logo.png";
+    "assets/images/auth/Damotak Director Signature.png";
 
 
 
@@ -1313,11 +1440,10 @@ ${resultTable.outerHTML}
         const fileTitle = `${studentName.replace(/\s+/g, "_")}_${studentID}_Result`;
         printWindow.document.title = fileTitle;
 
-            printWindow.document.getElementById("classTeacherSignatureImg").src =
-    "assets/images/auth/Damotak Logo.png";
+           
 
 printWindow.document.getElementById("proprietorSignatureImg").src =
-    "assets/images/auth/Damotak Logo.png";
+    "assets/images/auth/Damotak Director Signature.png";
 
         setTimeout(() => { printWindow.focus(); printWindow.print(); }, 1000);
         printWindow.onafterprint = printWindow.onbeforeunload = () => {
@@ -1504,7 +1630,7 @@ function clearInputs() {
 // Get Next Class
 // ---------------------------
 function getNextClass(currentClass) {
-    const classes = ["Creche","Nursery 1","Nursery 2","Primary 1","Primary 2","Primary 3","Primary 4","Primary 5","JSS 1","JSS 2","JSS 3","SSS 1","SSS 2","SSS 3"];
+    const classes = ["Pre Nusery","Pre-basic 1","Pre-basic 2","Pre-basic 3","Basic 1","Basic 2","Basic 3","Basic 4","Basic 5","JSS 1","JSS 2","JSS 3","SSS 1","SSS 2","SSS 3"];
     const index = classes.indexOf(currentClass);
     if (index >= 0 && index < classes.length - 1) return classes[index+1];
     if (index === classes.length - 1) return "Graduate";
