@@ -70,13 +70,15 @@ function showNotification(message, success) {
 // ---------------------------
 // Term Change Logic
 // ---------------------------
+let currentTerm = "First Term"; // Default term, update as needed
+
 document.getElementById("studentTerm").addEventListener("change", async (e) => {
-  const term = e.target.value;
+  currentTerm = e.target.value; // Update current term
 
   const attendanceDetailsContainer = document.querySelectorAll('.p-3.mt-4.border-top')[0];
   const remarksContainer = document.querySelectorAll('.p-3.mt-4.border-top')[1];
 
-  if (term === "Yearly Summary") {
+  if (currentTerm === "Yearly Summary") {
     yearlySummaryContainer.style.display = "block";
     document.getElementById("resultTable").parentElement.style.display = "none";
     await loadYearlySummary();
@@ -89,10 +91,13 @@ document.getElementById("studentTerm").addEventListener("change", async (e) => {
     document.getElementById("printButton").style.display = "none";
     document.getElementById("addRow").style.display = "block";
     document.getElementById("resultTable").parentElement.style.display = "block";
-    await loadPreviousResults(term);
+    await loadPreviousResults(currentTerm);
     attendanceDetailsContainer.style.display = "block";
     remarksContainer.style.display = "block";
   }
+
+  // Reload subjects based on new term to adjust CA/Exam display
+  loadDefaultSubjectsForClass(document.getElementById("studentClass").textContent);
 });
 
 // ======================================================
@@ -129,8 +134,6 @@ async function loadStudent() {
     showNotification("⚠️ Error loading student info: " + err.message, false);
   }
 }
-
-
 
 // ======================================================
 // AUTO LOAD SUBJECTS BASED ON CLASS + ORDERING LOGIC
@@ -171,8 +174,6 @@ function loadDefaultSubjectsForClass(studentClass) {
 
   console.log("Subjects Loaded in Order:", orderedSubjects);
 }
-
-
 
 // ======================================================
 // DEFAULT SUBJECT LISTS FOR EACH CLASS
@@ -278,7 +279,7 @@ const defaultSubjects = {
     "Mathematics", "English", "Physical and Health Education (PHE)",
     "Business studies (BS)", "Social and citizenship studies",
     "Basic Science and Technology (BST)", "Christian Religion Studies (CRS)",
-    "Cultural and creative Art (CCA)", "Nigerian History", "Diction",
+    "Cultural and creative Art (CCA)", "Nigeria History", "Diction",
     "Digital Technology", "Dictation", "Yoruba"
   ],
 
@@ -286,7 +287,7 @@ const defaultSubjects = {
     "Mathematics", "English", "Pre- vocational studies (PVS)",
     "Business studies (BS)", "National Value Education (NVE)",
     "Basic Science and Technology (BST)", "Christian Religion Studies (CRS)",
-    "Cultural and creative Art (CCA)", "Nigerian History", "Diction",
+    "Cultural and creative Art (CCA)", "Nigeria History", "Diction",
     "Information and Communication Technology (ICT)", "Dictation", "Yoruba"
   ],
 
@@ -294,7 +295,7 @@ const defaultSubjects = {
     "Mathematics", "English", "Pre- vocational studies (PVS)",
     "Business studies (BS)", "National Value Education (NVE)",
     "Basic Science and Technology (BST)", "Christian Religion Studies (CRS)",
-    "Cultural and creative Art (CCA)", "Nigerian History", "Diction",
+    "Cultural and creative Art (CCA)", "Nigeria History", "Diction",
     "Information and Communication Technology (ICT)", "Dictation", "Yoruba"
   ],
 
@@ -312,14 +313,10 @@ const defaultSubjects = {
   ]
 };
 
-
-
 // ======================================================
 // START
 // ======================================================
 loadStudent();
-
-
 
 // ---------------------------
 // Add Subject Row
@@ -327,8 +324,11 @@ loadStudent();
 function addSubjectRow(subject = "", ca1 = "", ca2 = "", exam = "", total = "0", grade = "-", remark = "-", readOnly = false) {
   const row = document.createElement("tr");
 
-  if (isSS3) {
-    // SS3 — Exam Only
+  // Determine if CA should be shown: For SS3, only if First Term
+  const showCA = !isSS3 || currentTerm === "First Term";
+
+  if (!showCA) {
+    // SS3 Second/Third Term — Exam Only
     row.innerHTML = `
       <td class="sl">${tbody.children.length + 1}</td>
       <td><input type="text" class="form-control subject-input" value="${subject}" ${readOnly ? "readonly" : ""}></td>
@@ -341,7 +341,7 @@ function addSubjectRow(subject = "", ca1 = "", ca2 = "", exam = "", total = "0",
       <td class="text-center">${readOnly ? "" : '<button class="btn btn-danger btn-sm remove-row">✕</button>'}</td>
     `;
   } else {
-    // Normal Classes
+    // Normal Classes or SS3 First Term
     row.innerHTML = `
       <td class="sl">${tbody.children.length + 1}</td>
       <td><input type="text" class="form-control subject-input" value="${subject}" ${readOnly ? "readonly" : ""}></td>
@@ -386,8 +386,10 @@ tbody.addEventListener("input", (e) => {
   const tr = e.target.closest("tr");
   if (!tr) return;
 
-  // SS3 — Exam only
-  if (isSS3) {
+  const showCA = !isSS3 || currentTerm === "First Term";
+
+  // If no CA, Exam only
+  if (!showCA) {
     const exam = parseInt(tr.querySelector(".exam-input").value) || 0;
     const total = exam;
 
@@ -396,7 +398,7 @@ tbody.addEventListener("input", (e) => {
     return;
   }
 
-  // Normal classes
+  // Normal classes or SS3 First Term
   const caInputs = tr.querySelectorAll(".ca-input");
   const examInput = tr.querySelector(".exam-input");
 
@@ -418,8 +420,10 @@ tbody.addEventListener("input", (e) => {
   const tr = target.closest("tr");
   if (!tr) return;
 
-  // Validate CA Inputs (Normal classes only)
-  if (target.classList.contains("ca-input") && !isSS3) {
+  const showCA = !isSS3 || currentTerm === "First Term";
+
+  // Validate CA Inputs (only if CA is shown)
+  if (target.classList.contains("ca-input") && showCA) {
     if (parseInt(target.value) > 20) {
       alert(`❌ CA cannot be more than 20! Value reset to 0.`);
       target.value = 0;
@@ -428,7 +432,7 @@ tbody.addEventListener("input", (e) => {
 
   // Validate Exam Input
   if (target.classList.contains("exam-input")) {
-    const maxExam = isSS3 ? 100 : 60;
+    const maxExam = showCA ? 60 : 100;
     if (parseInt(target.value) > maxExam) {
       alert(`❌ Exam cannot be more than ${maxExam}! Value reset to 0.`);
       target.value = 0;
@@ -565,6 +569,15 @@ remarkFields.forEach((id, index) => {
       }
     }
   });
+});
+
+// Auto Teacher Remarks //
+document.getElementById("remarkSelect").addEventListener("change", function () {
+    const selectedRemark = this.value;
+    const remarkBox = document.getElementById("classTeacherRemark");
+
+    // Auto-fill the textarea
+    remarkBox.value = selectedRemark;
 });
 
 
@@ -987,6 +1000,64 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
     text-transform: uppercase !important;
   }
 
+  <style media="print">
+@media print {
+
+  /* Tight margins (saves 40% space) */
+  body {
+      margin: 10mm !important;
+      padding: 0;
+      zoom: 0.82; /* Shrinks entire page while keeping quality */
+  }
+
+  /* Reduce headings */
+  h1, h2, h3, h4, h5, h6 {
+      margin: 2px 0 !important;
+      padding: 0 !important;
+      line-height: 1.1 !important;
+  }
+
+  /* Reduce general text */
+  p, span, label, li, td, th {
+      font-size: 11px !important;
+      line-height: 1.2 !important;
+  }
+
+  /* Table compression */
+  table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+  }
+
+  th, td {
+      padding: 3px 4px !important;
+      border: 1px solid #000 !important;
+  }
+
+  /* Reduce image/logo size */
+  img {
+      max-height: 60px !important;
+      width: auto !important;
+  }
+
+  /* Hide unnecessary elements */
+  .no-print, .btn, .button, .actions, .controls {
+      display: none !important;
+  }
+
+  /* Prevent page break inside tables */
+  table, tr, td, th {
+      page-break-inside: avoid !important;
+  }
+
+  /* Force page to max 2 pages */
+  html, body {
+      height: auto !important;
+      max-height: 1900px !important;
+      overflow: hidden !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1273,7 +1344,7 @@ printWindow.document.getElementById("proprietorSignatureImg").src =
 
       printWindow.onafterprint = printWindow.onbeforeunload = () => {
         printWindow.close();
-        location.href = "result-add.html";
+        location.href = "result-list.html";
       };
     };
 
