@@ -914,16 +914,19 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
 
 
 
-  .school-logo {
-  border: 3px solid #0047AB; /* change color as you like */
-  border-radius: 12px;        /* rounded corners, 0 for sharp edges */
-  padding: 5px;               /* space between border and image */
-  width: 150px;               /* adjust size */
-  height: auto;               /* maintain aspect ratio */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* subtle shadow for sharp look */
-  display: block;             /* center with margin if needed */
-  margin: 20px auto;          /* centers image horizontally */
-}
+ 
+
+.school-logo {
+    width: 180px;            /* bigger logo */
+    height: auto;
+    display: block;
+    margin: 10px auto;
+    border: 4px solid #0047AB;
+    border-radius: 15px;
+    padding: 6px;
+    box-shadow: 0 5px 12px rgba(0,0,0,0.25);
+    transform: scale(1.1);   /* prevents shrinking */
+    }
 
   .header {
     text-align: center;
@@ -931,7 +934,14 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
     position: relative;
   }
   .header img { width: 100px; margin-bottom: 10px; }
-  .header h3 { margin: 5px 0; color: #1c3d72; text-transform: uppercase; letter-spacing: 1px; }
+   .header h3 { font-size: 26px;         /* larger bold heading */
+    font-weight: 900;        /* heavy bold */
+    color: #1c3d72;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* makes it stand out */
+    margin-top: 5px; }
+ 
   .header p { margin: 2px 0; font-size: 13px; }
 
   .header::after {
@@ -1058,13 +1068,29 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
   }
 }
 
+@media print {
+  .school-logo {
+    transform: scale(1.3) !important; /* boost size in print */
+  }
+
+  .header h3 {
+    font-size: 30px !important;       /* bigger in print */
+    font-weight: 900 !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 0.5cm;
+  }
+}
+
 </style>
 </head>
 <body>
 
 <div class="header">
   <img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
-
+<br>
  
   <h3>Damotak International School</h3>
         <p>PRIMARY & JUNIOR SECONDARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
