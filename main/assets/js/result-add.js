@@ -848,275 +848,548 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
 
 
 
-    // Assumes variables like studentName, studentID, resultTable (Element), sessionYear, etc.
-// are available in the current scope exactly as you used before.
-
-document.getElementById("PrintResult").addEventListener("click", async () => {
-  try {
-    const iframe = document.getElementById("printFrame");
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-
-    // Grab your result html from the DOM (same as before)
-    const resultTableElement = resultTable; // keep same reference you used earlier
-    const resultHTML = resultTableElement ? resultTableElement.outerHTML : "<div>No results</div>";
-
-    // Build clean HTML string (single <style> block, no nested <style>)
-    const html = `
-<!doctype html>
+    // Build print window
+    const printWindow = window.open("", "_blank", "width=900,height=1000");
+    printWindow.document.open();
+    printWindow.document.write(`
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Student Result | ${studentName || "Student"}</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<title>Student Result | Damotak International School</title>
 <style>
-  /* ---------- Base ---------- */
-  :root { color-scheme: light; }
-  html,body { margin:0; padding:0; font-family: "Segoe UI", "Calibri", sans-serif; color:#2c3e50; background:#fff; }
-  .page { padding:20px; box-sizing:border-box; }
-
-  /* Watermark (kept, low impact) */
-  .watermark {
-    position: fixed; inset:0; z-index:0; pointer-events:none;
-    display:flex; align-items:center; justify-content:center;
-    opacity:0.05;
+  body {
+    font-family: "Segoe UI", "Calibri", sans-serif;
+    background: linear-gradient(135deg, #f7f9fc, #eef2f7);
+    color: #2c3e50;
+    margin: 30px;
+    line-height: 1.6;
+    position: relative;
   }
-  .watermark img { max-width:60%; height:auto; display:block; }
 
-  /* Header */
-  .header { text-align:center; margin-bottom:18px; position:relative; z-index:1; }
-  .school-logo { width:160px; height:auto; display:block; margin:0 auto 8px; border-radius:12px; border:3px solid #0047AB; padding:6px; box-shadow:0 5px 12px rgba(0,0,0,0.12); }
-  .header h3 { margin:6px 0 4px; font-size:22px; font-weight:800; color:#1c3d72; text-transform:uppercase; letter-spacing:1px; }
-  .header p { margin:2px 0; font-size:12px; }
+  /* Watermark */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 750px;
+    height: 750px;
+    background: url('assets/images/auth/Damotak Logo.png') no-repeat center center;
+    background-size: 60%;
+    opacity: 0.05;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+  }
 
-  /* Layout */
-  .row { display:flex; gap:18px; flex-wrap:wrap; margin-bottom:12px; z-index:1; }
-  .col { flex:1; min-width:220px; background:#fff; border-radius:8px; padding:12px; box-shadow:0 2px 5px rgba(0,0,0,0.06); }
-  .col h4 { margin:0 0 8px 0; font-size:13px; background:#1c3d72; color:#fff; padding:6px 8px; border-radius:6px; text-transform:uppercase; }
+  .signatures {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
 
-  ul { list-style:none; padding:0; margin:6px 0 0 0; font-size:12px; line-height:1.3; }
-  ul li { margin:4px 0; }
+.sign {
+    text-align: center;
+}
 
-  table { width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.04); margin-bottom:12px; }
-  th, td { padding:6px 8px; font-size:12px; text-align:center; border-bottom:1px solid #eef2f7; }
-  th { background:#1c3d72; color:#fff; font-weight:600; }
-  tr:nth-child(even) td { background:#f9fbff; }
-  .grade-tick { font-size:16px; color:#1c3d72; }
+.signature-img {
+    width: 80px;
+    height: auto;
+    display: block;
+    margin: 0 auto 5px auto; /* logo on top, small spacing */
+    opacity: 0.9;
+}
 
-  .section-title { font-weight:700; margin:14px 0 8px 0; font-size:13px; color:#1c3d72; text-transform:uppercase; padding-left:8px; border-left:5px solid #1c3d72; }
+.signature-line {
+    width: 150px;
+    height: 2px;
+    background: #000;
+    margin: 0 auto 5px auto;
+}
 
-  .signatures { display:flex; justify-content:space-between; gap:12px; margin-top:18px; }
-  .sign { width:48%; text-align:center; border-top:2px solid #1c3d72; padding-top:8px; font-size:12px; color:#1c3d72; font-weight:600; }
-  .signature-img { width:80px; height:auto; display:block; margin:0 auto 6px; opacity:0.95; }
+.signature-title {
+    font-size: 13px;
+    font-weight: bold;
+}
 
-  /* Prevent table breaks within rows */
-  table, tr, td, th { page-break-inside: avoid; }
 
-  /* ---------- Print specific ---------- */
+
+ 
+
+.school-logo {
+    width: 180px;            /* bigger logo */
+    height: auto;
+    display: block;
+    margin: 10px auto;
+    border: 4px solid #0047AB;
+    border-radius: 15px;
+    padding: 6px;
+    box-shadow: 0 5px 12px rgba(0,0,0,0.25);
+    transform: scale(1.1);   /* prevents shrinking */
+    }
+
+  .header {
+    text-align: center;
+    margin-bottom: 35px;
+    position: relative;
+  }
+  .header img { width: 100px; margin-bottom: 10px; }
+   .header h3 { font-size: 26px;         /* larger bold heading */
+    font-weight: 900;        /* heavy bold */
+    color: #1c3d72;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* makes it stand out */
+    margin-top: 5px; }
+ 
+  .header p { margin: 2px 0; font-size: 13px; }
+
+  .header::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 3px;
+    background: linear-gradient(to right, #1c3d72, #2a4d69);
+    border-radius: 5px;
+  }
+  
+  .col h4,
+.col ul {
+  text-transform: uppercase; /* Make text uppercase */
+}
+ 
+
+  .row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 25px; }
+  .col {
+    flex: 1; min-width: 250px; background: #fff;
+    border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+    padding: 15px 20px;
+  }
+  .col h4 { margin-bottom: 8px; font-size: 14px; text-transform: uppercase; color: #fff; background: #1c3d72; padding: 5px 10px; border-radius: 5px 5px 0 0; }
+  .col ul { list-style: none; padding: 10px 0 0 0; margin: 0; }
+  .col ul li { margin: 4px 0; font-size: 13px; }
+  .col ul li strong { color: #1c3d72; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin-bottom: 25px;
+    background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  th {
+    background: #1c3d72; color: #fff; padding: 6px; font-size: 13px; text-align: center;
+  }
+  td {
+    text-align: center; padding: 6px; border-bottom: 1px solid #eef2f7; font-size: 13px;
+  }
+  tr:nth-child(even) td { background: #f9fbff; }
+  .grade-tick { color: #1c3d72; font-size: 16px; }
+
+  .section-title {
+    font-weight: 700; margin: 25px 0 10px 0; font-size: 16px;
+    color: #1c3d72; text-transform: uppercase; letter-spacing: 0.5px;
+    border-left: 5px solid #1c3d72; padding-left: 10px;
+  }
+
+  .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
+  .sign {
+    border-top: 2px solid #1c3d72; width: 45%; text-align: center;
+    padding-top: 8px; font-size: 13px; color: #1c3d72; font-weight: 600;
+  }
+
   @media print {
-    body { margin:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .watermark { opacity:0.04; } /* even lighter on print */
-    @page { size:A4; margin:10mm; }
-    /* Hide any control elements that might exist */
-    .no-print, .btn, button, .controls { display:none !important; }
+    body { background: #fff; -webkit-print-color-adjust: exact; }
+    @page { size: A4; margin: 1cm; }
   }
+    
+  #resultTable td:nth-child(2),
+  #resultTable th:nth-child(2),
+  #resultTableBody input[name="subject"],
+  #resultTableBody select[name="subject"] {
+    text-transform: uppercase !important;
+  }
+
+@media print {
+
+  /* Tight margins (saves 40% space) */
+  body {
+      margin: 10mm !important;
+      padding: 0;
+      zoom: 0.82; /* Shrinks entire page while keeping quality */
+  }
+
+  /* Reduce headings */
+  h1, h2, h3, h4, h5, h6 {
+      margin: 2px 0 !important;
+      padding: 0 !important;
+      line-height: 1.1 !important;
+  }
+
+  /* Reduce general text */
+  p, span, label, li, td, th {
+      font-size: 11px !important;
+      line-height: 1.2 !important;
+  }
+
+  /* Table compression */
+  table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+  }
+
+  th, td {
+      padding: 3px 4px !important;
+      border: 1px solid #000 !important;
+  }
+
+  /* Reduce image/logo size */
+  img {
+      max-height: 60px !important;
+      width: auto !important;
+  }
+
+  /* Hide unnecessary elements */
+  .no-print, .btn, .button, .actions, .controls {
+      display: none !important;
+  }
+
+  /* Prevent page break inside tables */
+  table, tr, td, th {
+      page-break-inside: avoid !important;
+  }
+
+  /* Force page to max 2 pages */
+  html, body {
+      height: auto !important;
+      max-height: 1900px !important;
+      overflow: hidden !important;
+  }
+}
+
+@media print {
+  .school-logo {
+    transform: scale(1.3) !important; /* boost size in print */
+  }
+
+  .header h3 {
+    font-size: 30px !important;       /* bigger in print */
+    font-weight: 900 !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 0.5cm;
+  }
+}
+
 </style>
 </head>
 <body>
-  <div class="watermark" aria-hidden="true">
-    <img src="assets/images/auth/Damotak Logo.png" alt="watermark logo">
+
+<div class="header">
+  <img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
+<br>
+ 
+  <h3>Damotak International School</h3>
+        <p>PRIMARY & JUNIOR SECONDARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+        <p>JUNIOR SECONDARY & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE,SCHEME. OSOGBO.</p>
+       <p>EMAIL: Damotakint@gmail.com </p>
+       <p>NUMBERS: 08033880730 | 08082870544 | 08132687701 </p>
+  <p><strong>Academic Session:</strong> ${sessionYear}</p>
+</div>
+
+<div class="row">
+  <div class="col">
+    <h4>Student Details</h4>
+    <ul>
+      <li><strong>Name:</strong> ${studentName}</li>
+      <li><strong>Gender:</strong> ${studentGender}</li>
+      <li><strong>Class:</strong> ${studentClass}</li>
+      <li><strong>Term:</strong> ${term}</li>
+      <li><strong>Student ID:</strong> ${studentID}</li>
+      <li><strong>Date Issued:</strong> ${dateIssued}</li>
+    </ul>
   </div>
+  <div class="col">
+    <h4>Attendance & Physical Record</h4>
+    <ul>
+      <li><strong>Days Opened:</strong> ${daysOpened}</li>
+      <li><strong>Days Present:</strong> ${daysPresent}</li>
+      <li><strong>Days Absent:</strong> ${daysAbsent}</li>
+      <li><strong>Height:</strong> ${studentHeight} cm</li>
+      <li><strong>Weight:</strong> ${studentWeight} kg</li>
+      <li><strong>Next Term Begins:</strong> ${nextTermDate}</li>
+    </ul>
+  </div>
+</div>
 
-  <div class="page">
-    <div class="header">
-      <img src="assets/images/auth/Damotak Logo.png" alt="School Logo" class="school-logo">
-      <h3>Damotak International School</h3>
-      <p>PRIMARY & JUNIOR SECONDARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
-      <p>JUNIOR SECONDARY & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE, SCHEME. OSOGBO.</p>
-      <p>EMAIL: Damotakint@gmail.com | NUMBERS: 08033880730 | 08082870544 | 08132687701</p>
-      <p><strong>Academic Session:</strong> ${sessionYear || ""}</p>
-    </div>
+<div class="section-title">Subjects and Scores</div>
+${resultTable.outerHTML}
 
-    <div class="row">
-      <div class="col">
-        <h4>Student Details</h4>
-        <ul>
-          <li><strong>Name:</strong> ${studentName || ""}</li>
-          <li><strong>Gender:</strong> ${studentGender || ""}</li>
-          <li><strong>Class:</strong> ${studentClass || ""}</li>
-          <li><strong>Term:</strong> ${term || ""}</li>
-          <li><strong>Student ID:</strong> ${studentID || ""}</li>
-          <li><strong>Date Issued:</strong> ${dateIssued || ""}</li>
-        </ul>
-      </div>
-      <div class="col">
-        <h4>Attendance & Physical Record</h4>
-        <ul>
-          <li><strong>Days Opened:</strong> ${daysOpened || ""}</li>
-          <li><strong>Days Present:</strong> ${daysPresent || ""}</li>
-          <li><strong>Days Absent:</strong> ${daysAbsent || ""}</li>
-          <li><strong>Height:</strong> ${studentHeight || ""} cm</li>
-          <li><strong>Weight:</strong> ${studentWeight || ""} kg</li>
-          <li><strong>Next Term Begins:</strong> ${nextTermDate || ""}</li>
-        </ul>
-      </div>
-    </div>
+<div class="row">
+  <div class="col">
+    <h4>Summary</h4>
+    <ul>
+      <li><strong>Total Marks:</strong> ${totalScore}</li>
+      <li><strong>Average Score:</strong> ${avgScore}%</li>
+    </ul>
+  </div>
+  <div class="col">
+    <h4>Remarks</h4>
+    <ul>
+      <li><strong>Class Teacher:</strong> ${classRemark}</li>
+      <li><strong>Head Teacher:</strong>  ${headRemarkAuto}</li>
+    </ul>
+  </div>
+</div>
 
-    <div class="section-title">Subjects and Scores</div>
-    ${resultHTML}
+<!-- AFFECTIVE & PSYCHOMOTOR -->
 
-    <div class="row">
-      <div class="col">
-        <h4>Summary</h4>
-        <ul>
-          <li><strong>Total Marks:</strong> ${totalScore || ""}</li>
-          <li><strong>Average Score:</strong> ${avgScore || ""}%</li>
-        </ul>
-      </div>
-      <div class="col">
-        <h4>Remarks</h4>
-        <ul>
-          <li><strong>Class Teacher:</strong> ${classRemark || ""}</li>
-          <li><strong>Head Teacher:</strong> ${headRemarkAuto || ""}</li>
-        </ul>
-      </div>
-    </div>
+<div class="section-title">Affective & Psychomotor Domain (A - E)</div>
 
-    <div class="section-title">Affective & Psychomotor Domain (A - E)</div>
+<table>
 
-    <!-- (You had a long table; I keep it minimal here but you can paste your full table if you prefer) -->
-    <table>
-      <thead>
-        <tr><th>Area</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Neatness</td>
-          <td class="grade-tick">${Neatness=='A'?'✔️':''}</td>
-          <td class="grade-tick">${Neatness=='B'?'✔️':''}</td>
-          <td class="grade-tick">${Neatness=='C'?'✔️':''}</td>
-          <td class="grade-tick">${Neatness=='D'?'✔️':''}</td>
-          <td class="grade-tick">${Neatness=='E'?'✔️':''}</td>
-        </tr>
-        <!-- repeat other rows similarly... -->
-      </tbody>
-    </table>
+<thead>
 
-    <div class="section-title">System Grading</div>
-    <table>
-      <thead><tr><th>Grade</th><th>Score Range</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>A</td><td>75-100</td><td>Excellent</td></tr>
-        <tr><td>B</td><td>60-74</td><td>Very Good</td></tr>
-        <tr><td>C</td><td>50-59</td><td>Good</td></tr>
-        <tr><td>D</td><td>40-49</td><td>Pass</td></tr>
-        <tr><td>E</td><td>0-39</td><td>Fail</td></tr>
-      </tbody>
-    </table>
+<tr>
 
-    <div class="signatures">
-      <div class="sign">
-        <img id="classTeacherSignatureImg" class="signature-img" src="">
+<th>Area</th>
+
+<th>A</th>
+
+<th>B</th>
+
+<th>C</th>
+
+<th>D</th>
+
+<th>E</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td>Neatness</td>
+
+<td class="grade-tick">${Neatness=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Neatness=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Neatness=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Neatness=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Neatness=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Politeness</td>
+
+<td class="grade-tick">${Politeness=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Politeness=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Politeness=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Politeness=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Politeness=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Punctuality</td>
+
+<td class="grade-tick">${Punctuality=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Punctuality=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Punctuality=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Punctuality=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Punctuality=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Responsibility</td>
+
+<td class="grade-tick">${Responsibility=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Responsibility=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Responsibility=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Responsibility=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Responsibility=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Teamwork</td>
+
+<td class="grade-tick">${Teamwork=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Teamwork=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Teamwork=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Teamwork=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Teamwork=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Leadership</td>
+
+<td class="grade-tick">${Leadership=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Leadership=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Leadership=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Leadership=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Leadership=='E'?'✔️':''}</td>
+
+</tr>
+
+<tr>
+
+<td>Helping Others</td>
+
+<td class="grade-tick">${Helping=='A'?'✔️':''}</td>
+
+<td class="grade-tick">${Helping=='B'?'✔️':''}</td>
+
+<td class="grade-tick">${Helping=='C'?'✔️':''}</td>
+
+<td class="grade-tick">${Helping=='D'?'✔️':''}</td>
+
+<td class="grade-tick">${Helping=='E'?'✔️':''}</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<!-- ADDITIONAL GRADING TABLES -->
+
+<div class="section-title">System Grading</div>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Grade</th>
+
+<th>Score Range</th>
+
+<th>Description</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr><td>A</td><td>75-100</td><td>Excellent</td></tr>
+
+<tr><td>B</td><td>60-74</td><td>Very Good</td></tr>
+
+<tr><td>C</td><td>50-59</td><td>Good</td></tr>
+
+<tr><td>D</td><td>40-49</td><td>Pass</td></tr>
+
+<tr><td>E</td><td>0-39</td><td>Fail</td></tr>
+
+</tbody>
+
+</table>
+
+<BR>
+
+<BR>
+
+<div class="signatures">
+
+    <div class="sign">
+        <img id="classTeacherSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
         <div class="signature-title">Class Teacher’s Signature</div>
-      </div>
-      <div class="sign">
-        <img id="proprietorSignatureImg" class="signature-img" src="">
-        <div class="signature-title">Proprietor’s Signature</div>
-      </div>
     </div>
 
-  </div> <!-- .page -->
+    <div class="sign">
+        <img id="proprietorSignatureImg" class="signature-img">
+        <div class="signature-line"></div>
+        <div class="signature-title">Proprietor’s Signature</div>
+    </div>
+
+</div>
+
+
 </body>
 </html>
-`;
+    `);
+    printWindow.document.close();
 
-    // Write HTML into iframe
-    doc.open();
-    doc.write(html);
-    doc.close();
+    // Print logic
+    printWindow.onload = () => {
+      const fileTitle = `${studentName.replace(/\s+/g, "_")}_${studentID}_Result`;
+      printWindow.document.title = fileTitle;
 
-    // Helper: wait for all images inside iframe to load (watermark + logos + signatures)
-    const waitForImages = () => new Promise((resolve) => {
-      const imgs = Array.from(doc.querySelectorAll("img"));
-      if (!imgs.length) return resolve();
-      let count = 0;
-      imgs.forEach(img => {
-        // If already loaded, count it
-        if (img.complete && img.naturalWidth !== 0) {
-          count++;
-          if (count === imgs.length) resolve();
-          return;
-        }
-        // Hook load / error
-        img.addEventListener("load", () => {
-          count++; if (count === imgs.length) resolve();
-        });
-        img.addEventListener("error", () => {
-          count++; if (count === imgs.length) resolve();
-        });
-      });
-    });
+     
 
-    // Set signature images (ensure these paths are correct & accessible)
-    // We set them after write so they exist in the iframe DOM
-    const setSignatures = () => {
-      const prop = doc.getElementById("proprietorSignatureImg");
-      const cls = doc.getElementById("classTeacherSignatureImg");
-      if (prop) prop.src = "assets/images/auth/Damotak Director Signature.png";
-      if (cls) cls.src = "assets/images/auth/Class Teacher Signature.png"; // change as needed
-    };
-    setSignatures();
+printWindow.document.getElementById("proprietorSignatureImg").src =
+    "assets/images/auth/Damotak Director Signature.png";
 
-    // Wait for images; give extra small delay to ensure rendering on Android
-    await waitForImages();
-    await new Promise(r => setTimeout(r, 600)); // small buffer for Android
 
-    // Focus and call print on the iframe's window (works on Android)
-    const iwin = iframe.contentWindow;
-    iwin.focus();
-    // Use try/catch because some browsers may throw if print is blocked
-    try {
-      iwin.print();
-    } catch (e) {
-      // fallback: open print dialog in parent if iframe print fails (rare)
-      console.warn("iframe print failed:", e);
-      window.print();
-    }
 
-    // Close / redirect after printing (use onafterprint inside iframe if supported)
-    // We attach listeners in both parent and iframe for compatibility
-    const cleanup = () => {
-      // optional: redirect user back to result list after printing
-      // location.href = "result-list.html"; // uncomment if desired
-      // clear iframe content to free memory
-      try { doc.open(); doc.write(""); doc.close(); } catch (e) {}
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 2000);
+
+      printWindow.onafterprint = printWindow.onbeforeunload = () => {
+        printWindow.close();
+        location.href = "result-list.html";
+      };
     };
 
-    // Try iframe onafterprint, else fallback to timeout
-    if ("onafterprint" in iwin) {
-      iwin.onafterprint = () => { cleanup(); };
-    } else {
-      // fallback: run cleanup after 2 seconds (printing dialog typically closes)
-      setTimeout(cleanup, 2000);
-    }
-
-  } catch (err) {
-    console.error("Print failed:", err);
-    alert("Printing failed. Please try again or use desktop. Error: " + err.message);
-  }
+    setTimeout(() => {
+      if (addSubjectBtn) addSubjectBtn.style.display = "inline-block";
+    }, 3000);
+  };
 });
-
 
 // ---------------------------
 // Global Variables
 // ---------------------------
-//let studentName = "";
-//let studentGender = "";
-//let studentClass = "";
-//let sessionYear = "";
-//let term = "Yearly Summary";
-//let avgScore = 0;
-//let totalScoreValue = 0;
-//let promotionStatus = "";
+let studentName = "";
+let studentGender = "";
+let studentClass = "";
+let sessionYear = "";
+let term = "Yearly Summary";
+let avgScore = 0;
+let totalScoreValue = 0;
+let promotionStatus = "";
 
 // ---------------------------
 // Print Result Function
@@ -1190,8 +1463,7 @@ tr:nth-child(even) td { background:#f9fbff; }
     font-size: 13px;
     font-weight: bold;
 }
-
-
+    
 </style>
 </head>
 <body>
