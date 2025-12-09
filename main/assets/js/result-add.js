@@ -912,10 +912,6 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
     font-weight: bold;
 }
 
-
-
- 
-
 .school-logo {
     width: 180px;            /* bigger logo */
     height: auto;
@@ -1011,63 +1007,6 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
   }
 
 @media print {
-
-  /* Tight margins (saves 40% space) */
-  body {
-      margin: 10mm !important;
-      padding: 0;
-      zoom: 0.82; /* Shrinks entire page while keeping quality */
-  }
-
-  /* Reduce headings */
-  h1, h2, h3, h4, h5, h6 {
-      margin: 2px 0 !important;
-      padding: 0 !important;
-      line-height: 1.1 !important;
-  }
-
-  /* Reduce general text */
-  p, span, label, li, td, th {
-      font-size: 11px !important;
-      line-height: 1.2 !important;
-  }
-
-  /* Table compression */
-  table {
-      width: 100% !important;
-      border-collapse: collapse !important;
-  }
-
-  th, td {
-      padding: 3px 4px !important;
-      border: 1px solid #000 !important;
-  }
-
-  /* Reduce image/logo size */
-  img {
-      max-height: 60px !important;
-      width: auto !important;
-  }
-
-  /* Hide unnecessary elements */
-  .no-print, .btn, .button, .actions, .controls {
-      display: none !important;
-  }
-
-  /* Prevent page break inside tables */
-  table, tr, td, th {
-      page-break-inside: avoid !important;
-  }
-
-  /* Force page to max 2 pages */
-  html, body {
-      height: auto !important;
-      max-height: 1900px !important;
-      overflow: hidden !important;
-  }
-}
-
-@media print {
   .school-logo {
     transform: scale(1.3) !important; /* boost size in print */
   }
@@ -1082,8 +1021,10 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
     margin: 0.5cm;
   }
 }
-
 </style>
+
+
+
 </head>
 <body>
 
