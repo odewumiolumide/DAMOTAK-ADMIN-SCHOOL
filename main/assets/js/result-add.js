@@ -229,50 +229,39 @@ const defaultSubjects = {
   ],
 
   "pre-basic 3": [
-    "English (letter work)",
-    "Mathematics (Number work)",
-    "Social Habit",
-    "Health Habit",
-    "Diction ",
-    "PHE",
-    "Elementary Science",
-    "Rhymes",
-    "Writing",
-    "Fine Art/ colour",
-    "QR",
-    "VR",
-    "Literature",
-    "Dictation"
+    "Mathematics", "English Studies", "Diction", "BST", "Literature",
+    "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
+    "Yoruba", "NVE", "History", "Dictation"
   ],
 
   "basic 1": [
     "Mathematics", "English Studies", "Diction", "BST", "Literature",
     "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
-    "Yoruba", "NVE", "History", "Dictation", "Writing"
+    "Yoruba", "NVE", "History", "Dictation"
   ],
 
   "basic 2": [
     "Mathematics", "English Studies", "Diction", "BST", "Literature",
     "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
-    "Yoruba", "NVE", "History", "Dictation", "Writing"
+    "Yoruba", "NVE", "History", "Dictation"
   ],
 
   "basic 3": [
     "Mathematics", "English Studies", "Diction", "BST", "Literature",
     "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
-    "Yoruba", "NVE", "History", "Dictation", "Writing"
+    "Yoruba", "NVE", "History", "Dictation"
   ],
 
   "basic 4": [
     "Mathematics", "English Studies", "Diction", "PVS", "BST",
-    "Literature ", "Quatitative Reasoning", "Verbal Reasoning",
-    "CCA", "CRS", "Yoruba", "NVE", "History", "Dictation", "Writing"
+    "Literature", "Quatitative Reasoning", "Verbal Reasoning",
+    "CCA", "CRS", "Yoruba", "NVE", "History", "Dictation"
   ],
 
   "basic 5": [
     "Mathematics", "English Studies", "Diction", "PVS", "BST",
-    "Literature ", "Quatitative Reasoning", "Verbal Reasoning",
-    "CCA", "CRS", "Yoruba", "NVE", "History", "Dictation", "Writing"
+    "Literature", "Quatitative Reasoning", "Verbal Reasoning",
+    "CCA", "CRS", "Yoruba", "NVE", "History", "Dictation"
   ],
 
   "jss 1": [
@@ -1024,7 +1013,6 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
 </style>
 
 
-
 </head>
 <body>
 
@@ -1033,8 +1021,8 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
 <br>
  
   <h3>Damotak International School</h3>
-        <p>PRIMARY & JUNIOR SECONDARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
-        <p>JUNIOR SECONDARY & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE,SCHEME. OSOGBO.</p>
+        <p>Nusery & PRIMARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+        <p>JUNIOR & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE,SCHEME. OSOGBO.</p>
        <p>EMAIL: Damotakint@gmail.com </p>
        <p>NUMBERS: 08033880730 | 08082870544 | 08132687701 </p>
   <p><strong>Academic Session:</strong> ${sessionYear}</p>
