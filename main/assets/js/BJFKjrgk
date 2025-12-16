@@ -4570,4 +4570,182 @@ document.getElementById("backBtn").addEventListener("click", () => window.locati
 }
 </style>
 
+// ---------------------------
+// Load Previous Results (With Subject Order Preserved + New Subjects)
+// ---------------------------
+async function loadPreviousResults() {
+  const term = document.getElementById("studentTerm")?.value?.trim();
+  if (!term || !studentID) return;
+
+  try {
+    const snapshot = await get(ref(resultDb, `Results/${studentID}/${term}`));
+    const studentClass = document.getElementById("studentClass").textContent.trim().toLowerCase();
+    const classSubjects = defaultSubjects[studentClass] || [];
+
+    tbody.innerHTML = ""; // Clear table
+
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const savedSubjects = data.Subjects || {};
+
+      // Combine saved subjects and default subjects
+      const allSavedSubjectNames = Object.keys(savedSubjects);
+
+      // Sort: default subjects first (if they exist in saved), then any new subjects added manually
+      const orderedSubjects = [
+        ...classSubjects.filter(s => allSavedSubjectNames.includes(s)), // default subjects present in saved
+        ...allSavedSubjectNames.filter(s => !classSubjects.includes(s))  // new subjects
+      ];
+
+      // Add subjects to table
+      orderedSubjects.forEach(subName => {
+        const s = savedSubjects[subName] || {};
+        addSubjectRow(
+          subName,
+          s.ca1 || 0,
+          s.ca2 || 0,
+          s.exam || 0,
+          s.total || 0,
+          s.grade || "-",
+          s.remark || "-",
+          false // Editable
+        );
+      });
+
+      // Load affective & other info
+      document.getElementById("classTeacherRemark").value = data.classTeacherRemark || "";
+      document.getElementById("headTeacherRemark").value = data.headTeacherRemark || "";
+      document.getElementById("Neatness").value = data.Neatness || "";
+      document.getElementById("Politeness").value = data.Politeness || "";
+      document.getElementById("Punctuality").value = data.Punctuality || "";
+      document.getElementById("Responsibility").value = data.Responsibility || "";
+      document.getElementById("Teamwork").value = data.Teamwork || "";
+      document.getElementById("Leadership").value = data.Leadership || "";
+      document.getElementById("Helping").value = data.Helping || "";
+      document.getElementById("Honesty").value = data.Honesty || "";
+      document.getElementById("Participation").value = data.Participation || "";
+      document.getElementById("daysOpened").value = data.daysOpened || "";
+      document.getElementById("daysPresent").value = data.daysPresent || "";
+      document.getElementById("daysAbsent").value = data.daysAbsent || "";
+      document.getElementById("studentHeight").value = data.studentHeight || "";
+      document.getElementById("studentWeight").value = data.studentWeight || "";
+      document.getElementById("nextTermDate").value = data.nextTermDate || "";
+
+      showNotification("✅ Loaded previous results!", true);
+
+    } else {
+      showNotification("ℹ️ No previous result found.", false);
+    }
+  } catch (err) {
+    console.error(err);
+    showNotification("⚠️ Failed to load results: " + err.message, false);
+  }
+}
+
+document.getElementById("studentTerm").addEventListener("change", loadPreviousResults);
+window.addEventListener("load", () => setTimeout(loadPreviousResults, 200));
+
+
+
+// ---------------------------
+// Load Previous Results (With Subject Order Preserved)
+// ---------------------------
+async function loadPreviousResults() {
+  const term = document.getElementById("studentTerm")?.value?.trim();
+  if (!term || !studentID) return;
+
+  try {
+    const snapshot = await get(ref(resultDb, `Results/${studentID}/${term}`));
+
+    const studentClass = document.getElementById("studentClass").textContent.trim().toLowerCase();
+    const classSubjects = defaultSubjects[studentClass] || [];
+
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const savedSubjects = data.Subjects || {};
+
+      tbody.innerHTML = ""; // Clear table
+
+      console.log("Subjects Loaded in Order:", classSubjects);
+
+      // LOAD SUBJECTS USING YOUR CLASS ORDER
+      classSubjects.forEach(subName => {
+        const s = savedSubjects[subName] || {};
+
+        addSubjectRow(
+          subName,
+          s.ca1 || 0,
+          s.ca2 || 0,
+          s.exam || 0,
+          s.total || 0,
+          s.grade || "-",
+          s.remark || "-",
+          true
+        );
+      });
+
+      // LOAD AFFECTIVE + OTHERS
+      document.getElementById("classTeacherRemark").value = data.classTeacherRemark || "";
+      document.getElementById("headTeacherRemark").value = data.headTeacherRemark || "";
+      document.getElementById("Neatness").value = data.Neatness || "";
+      document.getElementById("Politeness").value = data.Politeness || "";
+      document.getElementById("Punctuality").value = data.Punctuality || "";
+      document.getElementById("Responsibility").value = data.Responsibility || "";
+      document.getElementById("Teamwork").value = data.Teamwork || "";
+      document.getElementById("Leadership").value = data.Leadership || "";
+      document.getElementById("Helping").value = data.Helping || "";
+      document.getElementById("Honesty").value = data.Honesty || "";
+      document.getElementById("Participation").value = data.Participation || "";
+      document.getElementById("daysOpened").value = data.daysOpened || "";
+      document.getElementById("daysPresent").value = data.daysPresent || "";
+      document.getElementById("daysAbsent").value = data.daysAbsent || "";
+      document.getElementById("studentHeight").value = data.studentHeight || "";
+      document.getElementById("studentWeight").value = data.studentWeight || "";
+      document.getElementById("nextTermDate").value = data.nextTermDate || "";
+
+      showNotification("✅ Loaded previous results!", true);
+
+    } else {
+      // DO NOT CLEAR SUBJECTS
+      showNotification("ℹ️ No previous result found.", false);
+    }
+  } catch (err) {
+    console.error(err);
+    showNotification("⚠️ Failed to load results: " + err.message, false);
+  }
+}
+
+document.getElementById("studentTerm").addEventListener("change", loadPreviousResults);
+window.addEventListener("load", () => setTimeout(loadPreviousResults, 200));
+
+
+function loadSubjectsInCorrectOrder(subjectData, defaultOrderArray) {
+    let finalOrdered = [];
+
+    // 1. Force Mathematics first
+    const mathKey = Object.keys(subjectData).find(s =>
+        s.toLowerCase().includes("math")
+    );
+    if (mathKey) finalOrdered.push(mathKey);
+
+    // 2. Force English second (English / English Studies)
+    const engKey = Object.keys(subjectData).find(s =>
+        s.toLowerCase().startsWith("english")
+    );
+    if (engKey && engKey !== mathKey) finalOrdered.push(engKey);
+
+    // 3. Load other subjects FOLLOWING default class order
+    defaultOrderArray.forEach(sub => {
+        if (subjectData[sub] && sub !== mathKey && sub !== engKey) {
+            finalOrdered.push(sub);
+        }
+    });
+
+    // 4. Render subjects to table
+    tbody.innerHTML = "";  
+    finalOrdered.forEach(sub => addSubjectRow(sub));
+
+    console.log("Subjects Loaded in Order:", finalOrdered);
+}
+
 

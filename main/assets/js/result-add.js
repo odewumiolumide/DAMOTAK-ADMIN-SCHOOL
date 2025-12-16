@@ -237,19 +237,19 @@ const defaultSubjects = {
   "basic 1": [
     "Mathematics", "English Studies", "Diction", "BST", "Literature",
     "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
-    "Yoruba", "NVE", "History", "Dictation"
+    "Yoruba", "NVE", "History", "Dictation", "PVS"
   ],
 
   "basic 2": [
     "Mathematics", "English Studies", "Diction", "BST", "Literature",
     "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
-    "Yoruba", "NVE", "History", "Dictation"
+    "Yoruba", "NVE", "History", "Dictation", "PVS"
   ],
 
   "basic 3": [
     "Mathematics", "English Studies", "Diction", "BST", "Literature",
     "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
-    "Yoruba", "NVE", "History", "Dictation"
+    "Yoruba", "NVE", "History", "Dictation", "PVS"
   ],
 
   "basic 4": [
@@ -571,105 +571,106 @@ document.getElementById("remarkSelect").addEventListener("change", function () {
 
 
 // ---------------------------
-// Load Previous Results (With Subject Order Preserved)
+// Load Previous Results (No Duplicate Subjects)
 // ---------------------------
 async function loadPreviousResults() {
-  const term = document.getElementById("studentTerm")?.value?.trim();
-  if (!term || !studentID) return;
-
-  try {
-    const snapshot = await get(ref(resultDb, `Results/${studentID}/${term}`));
+    const term = document.getElementById("studentTerm")?.value?.trim();
+    if (!term || !studentID) return;
 
     const studentClass = document.getElementById("studentClass").textContent.trim().toLowerCase();
     const classSubjects = defaultSubjects[studentClass] || [];
 
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      const savedSubjects = data.Subjects || {};
+    tbody.innerHTML = ""; // Clear table before loading
 
-      tbody.innerHTML = ""; // Clear table
+    try {
+        const snapshot = await get(ref(resultDb, `Results/${studentID}/${term}`));
 
-      console.log("Subjects Loaded in Order:", classSubjects);
+        const addedSubjects = new Set(); // Track subjects we've already added
 
-      // LOAD SUBJECTS USING YOUR CLASS ORDER
-      classSubjects.forEach(subName => {
-        const s = savedSubjects[subName] || {};
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const savedSubjects = data.Subjects || {};
+            const savedNames = Object.keys(savedSubjects);
 
-        addSubjectRow(
-          subName,
-          s.ca1 || 0,
-          s.ca2 || 0,
-          s.exam || 0,
-          s.total || 0,
-          s.grade || "-",
-          s.remark || "-",
-          true
-        );
-      });
+            const finalOrder = [];
 
-      // LOAD AFFECTIVE + OTHERS
-      document.getElementById("classTeacherRemark").value = data.classTeacherRemark || "";
-      document.getElementById("headTeacherRemark").value = data.headTeacherRemark || "";
-      document.getElementById("Neatness").value = data.Neatness || "";
-      document.getElementById("Politeness").value = data.Politeness || "";
-      document.getElementById("Punctuality").value = data.Punctuality || "";
-      document.getElementById("Responsibility").value = data.Responsibility || "";
-      document.getElementById("Teamwork").value = data.Teamwork || "";
-      document.getElementById("Leadership").value = data.Leadership || "";
-      document.getElementById("Helping").value = data.Helping || "";
-      document.getElementById("Honesty").value = data.Honesty || "";
-      document.getElementById("Participation").value = data.Participation || "";
-      document.getElementById("daysOpened").value = data.daysOpened || "";
-      document.getElementById("daysPresent").value = data.daysPresent || "";
-      document.getElementById("daysAbsent").value = data.daysAbsent || "";
-      document.getElementById("studentHeight").value = data.studentHeight || "";
-      document.getElementById("studentWeight").value = data.studentWeight || "";
-      document.getElementById("nextTermDate").value = data.nextTermDate || "";
+            // 1. Math first
+            const mathKey = savedNames.find(s => s.toLowerCase().includes("math"));
+            if (mathKey) finalOrder.push(mathKey);
 
-      showNotification("✅ Loaded previous results!", true);
+            // 2. English second
+            const engKey = savedNames.find(s => s.toLowerCase().startsWith("english"));
+            if (engKey && engKey !== mathKey) finalOrder.push(engKey);
 
-    } else {
-      // DO NOT CLEAR SUBJECTS
-      showNotification("ℹ️ No previous result found.", false);
+            // 3. Default class subjects (skip Math & English if already added)
+            classSubjects.forEach(sub => {
+                if (!finalOrder.includes(sub)) finalOrder.push(sub);
+            });
+
+            // 4. Any extra saved subjects not in default class list
+            savedNames.forEach(sub => {
+                if (!finalOrder.includes(sub)) finalOrder.push(sub);
+            });
+
+            // Render subjects
+            finalOrder.forEach(subName => {
+                if (!addedSubjects.has(subName)) {
+                    const s = savedSubjects[subName] || {};
+                    addSubjectRow(
+                        subName,
+                        s.ca1 || 0,
+                        s.ca2 || 0,
+                        s.exam || 0,
+                        s.total || 0,
+                        s.grade || "-",
+                        s.remark || "-",
+                        false
+                    );
+                    addedSubjects.add(subName);
+                }
+            });
+
+            // Load affective & other info
+            const fields = [
+                "classTeacherRemark","headTeacherRemark","Neatness","Politeness","Punctuality",
+                "Responsibility","Teamwork","Leadership","Helping","Honesty","Participation",
+                "daysOpened","daysPresent","daysAbsent","studentHeight","studentWeight"
+            ];
+            fields.forEach(id => {
+                document.getElementById(id).value = data[id] || "";
+            });
+
+            // Format date
+            if (data.nextTermDate) {
+                const d = new Date(data.nextTermDate);
+                document.getElementById("nextTermDate").value =
+                    `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+            } else {
+                document.getElementById("nextTermDate").value = "";
+            }
+
+            showNotification("✅ Loaded previous results!", true);
+
+        } else {
+            // No previous result: only render default class subjects
+            classSubjects.forEach(sub => {
+                if (!addedSubjects.has(sub)) {
+                    addSubjectRow(sub);
+                    addedSubjects.add(sub);
+                }
+            });
+            showNotification("ℹ️ No previous result found.", false);
+        }
+
+    } catch (err) {
+        console.error(err);
+        showNotification("⚠️ Failed to load results: " + err.message, false);
     }
-  } catch (err) {
-    console.error(err);
-    showNotification("⚠️ Failed to load results: " + err.message, false);
-  }
 }
 
 document.getElementById("studentTerm").addEventListener("change", loadPreviousResults);
 window.addEventListener("load", () => setTimeout(loadPreviousResults, 200));
 
-
-function loadSubjectsInCorrectOrder(subjectData, defaultOrderArray) {
-    let finalOrdered = [];
-
-    // 1. Force Mathematics first
-    const mathKey = Object.keys(subjectData).find(s =>
-        s.toLowerCase().includes("math")
-    );
-    if (mathKey) finalOrdered.push(mathKey);
-
-    // 2. Force English second (English / English Studies)
-    const engKey = Object.keys(subjectData).find(s =>
-        s.toLowerCase().startsWith("english")
-    );
-    if (engKey && engKey !== mathKey) finalOrdered.push(engKey);
-
-    // 3. Load other subjects FOLLOWING default class order
-    defaultOrderArray.forEach(sub => {
-        if (subjectData[sub] && sub !== mathKey && sub !== engKey) {
-            finalOrdered.push(sub);
-        }
-    });
-
-    // 4. Render subjects to table
-    tbody.innerHTML = "";  
-    finalOrdered.forEach(sub => addSubjectRow(sub));
-
-    console.log("Subjects Loaded in Order:", finalOrdered);
-}
 
 // ---------------------------
 // Save Result (Updated for SS3 & Normal Classes)
@@ -1021,7 +1022,7 @@ document.getElementById("headTeacherRemark").value = headRemarkAuto;
 <br>
  
   <h3>Damotak International School</h3>
-        <p>Nusery & PRIMARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
+        <p>NUSERY & PRIMARY : NEW OBA ROAD, ILE-IDANDE AREA, OKE-ONITEA</p>
         <p>JUNIOR & SENIOR SECONDARY : OFF AYEKALE LAROTIMELIHINE,SCHEME. OSOGBO.</p>
        <p>EMAIL: Damotakint@gmail.com </p>
        <p>NUMBERS: 08033880730 | 08082870544 | 08132687701 </p>
