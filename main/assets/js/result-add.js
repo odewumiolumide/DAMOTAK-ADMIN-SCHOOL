@@ -542,6 +542,15 @@ remarkFields.forEach(id => {
   });
 });
 
+const now = new Date();
+const day = String(now.getDate()).padStart(2, '0');
+const month = String(now.getMonth() + 1).padStart(2, '0'); // Months start at 0
+const year = now.getFullYear();
+
+const formattedDate = `${day}/${month}/${year}`;
+document.getElementById("dateIssued").textContent = formattedDate;
+
+
 // ----------------------------------------------
 // Auto Move to Next Affective Field When Enter is Pressed
 // ----------------------------------------------
