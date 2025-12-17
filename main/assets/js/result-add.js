@@ -237,13 +237,13 @@ const defaultSubjects = {
   "basic 1": [
     "Mathematics", "English Studies", "Diction", "BST", "Literature",
     "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
-    "Yoruba", "NVE", "History", "Dictation", "PVS"
+    "Yoruba", "NVE", "History", "Dictation"
   ],
 
   "basic 2": [
     "Mathematics", "English Studies", "Diction", "BST", "Literature",
     "Quatitative Reasoning", "Verbal Reasoning", "CCA", "CRS",
-    "Yoruba", "NVE", "History", "Dictation", "PVS"
+    "Yoruba", "NVE", "History", "Dictation"
   ],
 
   "basic 3": [
