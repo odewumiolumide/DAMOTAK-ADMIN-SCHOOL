@@ -46,6 +46,13 @@ if (studentForm) {
   studentForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const submitBtn = studentForm.querySelector('button[type="submit"]');
+    if (!submitBtn) return;
+
+    // Disable the submit button immediately to prevent double-click
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Processing...";
+
     const name = document.getElementById("studentName").value.trim();
     const phone = document.getElementById("studentPhone")?.value.trim() || "";
     const year = document.getElementById("studentYear")?.value || "";
@@ -55,15 +62,39 @@ if (studentForm) {
 
     if (!name || !gender || !studentClass || !term) {
       showNotification("⚠️ Please fill in all required fields.", false);
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Save";
       return;
     }
 
     if (/\d/.test(name)) {
       showNotification("⚠️ Student name cannot contain numbers.", false);
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Save";
       return;
     }
 
     try {
+      // ----------------------
+      // Check for duplicate student
+      // ----------------------
+      const snapshot = await get(child(ref(db), "Students"));
+      const allStudents = snapshot.exists() ? snapshot.val() : {};
+
+      const duplicate = Object.values(allStudents).some(s =>
+        s.name.toLowerCase() === name.toLowerCase() &&
+        s.studentClass === studentClass &&
+        s.term === term
+      );
+
+      if (duplicate) {
+        showNotification("⚠️ This student already exists for the selected class and term.", false);
+        return;
+      }
+
+      // ----------------------
+      // Generate unique student ID and save
+      // ----------------------
       const randomNum = Math.floor(1000 + Math.random() * 9000);
       const studentID = `${name.replace(/\s+/g, "").toLowerCase()}-${randomNum}`;
 
@@ -87,9 +118,14 @@ if (studentForm) {
     } catch (error) {
       console.error(error);
       showNotification("❌ Failed to add student: " + error.message, false);
+    } finally {
+      // Re-enable the button no matter what
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Save";
     }
   });
 }
+
 
 // ----------------------
 // 🔔 Notification Popup
